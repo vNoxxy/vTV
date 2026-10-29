@@ -7,6 +7,17 @@ enlever les pubs, la télémétrie et les applis préinstallées, et remplacer l
 > **Ne marche que sur une TV Android TV ou Google TV.** Samsung, LG, Roku, Vizio et Hisense VIDAA
 > ne sont pas compatibles : voir [cleanyour.tv/not-android](https://cleanyour.tv/not-android).
 
+## Philips : retrouver le modèle exact
+
+- **Étiquette au dos de la TV** (ou carton, facture) : une référence du type `55PUS8507/12`.
+  Les chiffres = taille en pouces, les lettres = gamme (PUS = LCD 4K, OLED…), puis série et année.
+- **Dans les menus** : Paramètres → À propos / Infos sur le téléviseur (selon l'année : Aide →
+  Identification du téléviseur).
+- **Le système** : si l'accueil affiche Google / le Play Store, c'est Android TV ou Google TV
+  (compatible). Les Philips d'entrée de gamme tournent sous **Saphi** ou **Titan OS** : pas d'ADB,
+  donc **non compatibles**.
+- Une fois le PC connecté, `tools\tv.py --probe` (étape B.2) donne aussi le modèle et le firmware.
+
 Ce dépôt ne recopie pas cleanyourtv. Il contient :
 
 | Fichier | Rôle |
