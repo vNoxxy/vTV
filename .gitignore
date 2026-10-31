@@ -2,3 +2,6 @@
 cleanyourtv/
 *.apk
 *.zip
+# Résultats de collecter-infos.ps1 (propres à ton boîtier)
+infos-boitier.txt
+accueil.png

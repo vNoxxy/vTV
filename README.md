@@ -7,16 +7,12 @@ enlever les pubs, la télémétrie et les applis préinstallées, et remplacer l
 > **Ne marche que sur une TV Android TV ou Google TV.** Samsung, LG, Roku, Vizio et Hisense VIDAA
 > ne sont pas compatibles : voir [cleanyour.tv/not-android](https://cleanyour.tv/not-android).
 
-## Philips : retrouver le modèle exact
+## Mon installation
 
-- **Étiquette au dos de la TV** (ou carton, facture) : une référence du type `55PUS8507/12`.
-  Les chiffres = taille en pouces, les lettres = gamme (PUS = LCD 4K, OLED…), puis série et année.
-- **Dans les menus** : Paramètres → À propos / Infos sur le téléviseur (selon l'année : Aide →
-  Identification du téléviseur).
-- **Le système** : si l'accueil affiche Google / le Play Store, c'est Android TV ou Google TV
-  (compatible). Les Philips d'entrée de gamme tournent sous **Saphi** ou **Titan OS** : pas d'ADB,
-  donc **non compatibles**.
-- Une fois le PC connecté, `tools\tv.py --probe` (étape B.2) donne aussi le modèle et le firmware.
+| Appareil | Système | Rôle |
+|---|---|---|
+| TV **Philips 55PUS6503/12** (2019, châssis TPM18.6E LA) | Saphi, pas Android | Écran seulement : cleanyourtv ne peut rien y faire. |
+| Boîtier **X88 Pro 10** (Rockchip RK3318, 4 Go / 32 Go) | Android 11 (selon l'étiquette) | C'est lui qu'on nettoie. Aucune liste cleanyourtv n'existe : on la construit (voir plus bas). |
 
 Ce dépôt ne recopie pas cleanyourtv. Il contient :
 
@@ -25,6 +21,24 @@ Ce dépôt ne recopie pas cleanyourtv. Il contient :
 | `cleanyourtv.commit` | La version exacte de cleanyourtv utilisée. |
 | `.github/workflows/compiler-apk.yml` | GitHub compile l'APK du lanceur : pas besoin de JDK ni de SDK Android sur le PC. |
 | `preparer-pc.ps1` | Récupère cleanyourtv sur le PC, installe ses outils Python et y place l'APK. |
+| `collecter-infos.ps1` | Lit le boîtier sans rien modifier et rassemble ce qu'il faut pour écrire sa liste. |
+
+## X88 Pro 10 : la découverte, avant tout nettoyage
+
+Sans liste existante, on ne désactive rien à l'aveugle. D'abord on lit le boîtier :
+
+1. Fais l'**étape 0** (APK), puis les parties **1** (sur le boîtier : options développeur, débogage
+   USB, adresse IP) et **2** (`preparer-pc.ps1`) de l'option B ci-dessous. Selon le firmware, le
+   menu s'appelle « À propos », « Préférences de l'appareil → À propos » ou « Système → À propos ».
+2. Lance la collecte (rien n'est modifié sur le boîtier) :
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File collecter-infos.ps1 -TvHost 192.168.1.50
+   ```
+3. Envoie `infos-boitier.txt` et `accueil.png`. La liste `listes\x88-pro-10.txt` est écrite à
+   partir de ça, puis appliquée en petits lots avec `disable.ps1` (étapes 3 à 5).
+
+L'accueil d'origine de ces boîtiers n'est pas un lanceur Google connu : à l'étape 4, passe son nom
+(ligne « Accueil actuel » de la collecte) avec `-StockLauncher <paquet>`.
 
 ## Étape 0 : récupérer l'APK du lanceur
 
