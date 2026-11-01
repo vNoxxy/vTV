@@ -12,33 +12,41 @@ enlever les pubs, la télémétrie et les applis préinstallées, et remplacer l
 | Appareil | Système | Rôle |
 |---|---|---|
 | TV **Philips 55PUS6503/12** (2019, châssis TPM18.6E LA) | Saphi, pas Android | Écran seulement : cleanyourtv ne peut rien y faire. |
-| Boîtier **X88 Pro 10** (Rockchip RK3318, 4 Go / 32 Go) | Android 11 (selon l'étiquette) | C'est lui qu'on nettoie. Aucune liste cleanyourtv n'existe : on la construit (voir plus bas). |
+| Boîtier **H96 Max V11** (Rockchip RK3318, 2 Go / 16 Go) | Android 11 | Le boîtier nettoyé : liste `listes/h96-max-v11.txt`, lanceur cleanyourtv. |
+| Boîtier **X88 Pro 10** (Rockchip RK3318, 4 Go / 32 Go) | Android | Pas utilisé : pas d'ADB réseau, cité dans les rapports BADBOX 2.0. |
 
 Ce dépôt ne recopie pas cleanyourtv. Il contient :
 
 | Fichier | Rôle |
 |---|---|
-| `cleanyourtv.commit` | La version exacte de cleanyourtv utilisée. |
-| `.github/workflows/compiler-apk.yml` | GitHub compile l'APK du lanceur : pas besoin de JDK ni de SDK Android sur le PC. |
-| `preparer-pc.ps1` | Récupère cleanyourtv sur le PC, installe ses outils Python et y place l'APK. |
+| `cleanyourtv.commit` | La version exacte de cleanyourtv utilisée (lanceur 3.1). |
+| `.github/workflows/compiler-apk.yml` | GitHub compile le lanceur (`lanceur-apk`), les add-ons et les raccourcis (`addons-apk`). |
+| `preparer-pc.ps1` | Récupère cleanyourtv sur le PC, installe ses outils Python et y place l'APK du lanceur. |
 | `collecter-infos.ps1` | Lit le boîtier sans rien modifier et rassemble ce qu'il faut pour écrire sa liste. |
+| `executer.ps1` + `commandes/` | Envoie au boîtier un fichier de commandes et garde sa réponse dans un `.txt`. |
+| `installer-addons.ps1` | Installe les APK du zip `addons-apk` (add-ons et raccourcis). |
+| `image-demarrage.ps1` | Envoie une image à l'add-on Startup & Branding. |
+| `listes/` | Les listes d'applis désactivées, par boîtier. |
+| `themes/vody/` | Le thème du lanceur, dans le style de vodystudio.fr. |
+| `raccourcis/` | Une appli par site de `raccourcis/sites.json` : sa tuile sur l'accueil ouvre le site dans Chrome. |
+| `visuels/` | `vody.py` dessine le fond d'écran, les tuiles des sites et l'écran de chargement. |
 
-## X88 Pro 10 : la découverte, avant tout nettoyage
+## H96 Max V11 : personnalisation
 
-Sans liste existante, on ne désactive rien à l'aveugle. D'abord on lit le boîtier :
+Depuis `N:\vTV`, après `git pull`, avec `$ip = '192.168.1.83'` :
 
-1. Fais l'**étape 0** (APK), puis les parties **1** (sur le boîtier : options développeur, débogage
-   USB, adresse IP) et **2** (`preparer-pc.ps1`) de l'option B ci-dessous. Selon le firmware, le
-   menu s'appelle « À propos », « Préférences de l'appareil → À propos » ou « Système → À propos ».
-2. Lance la collecte (rien n'est modifié sur le boîtier) :
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File collecter-infos.ps1 -TvHost 192.168.1.50
-   ```
-3. Envoie `infos-boitier.txt` et `accueil.png`. La liste `listes\x88-pro-10.txt` est écrite à
-   partir de ça, puis appliquée en petits lots avec `disable.ps1` (étapes 3 à 5).
+| Étape | Commande |
+|---|---|
+| Désinstaller les applis inutilisées | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\desinstaller.txt` |
+| Installer add-ons et raccourcis (zip `addons-apk` dézippé dans `addons-apk\`) | `powershell -ExecutionPolicy Bypass -File installer-addons.ps1 -TvHost $ip -Dossier .\addons-apk` |
+| Thème Vody (fond, dock, « Bonjour, Timéo ») | `cd cleanyourtv` puis `powershell -ExecutionPolicy Bypass -File tools\theme.ps1 -TvHost $ip ..\themes\vody` |
+| Horloge en écran de veille après 10 min | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\ecran-de-veille.txt` |
+| DNS anti-pub AdGuard (annuler : `dns-annuler.txt`) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\dns-adguard.txt` |
+| Image de l'écran de démarrage (Startup & Branding) | `powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost $ip` |
 
-L'accueil d'origine de ces boîtiers n'est pas un lanceur Google connu : à l'étape 4, passe son nom
-(ligne « Accueil actuel » de la collecte) avec `-StockLauncher <paquet>`.
+Le dock attend Stremio (`com.stremio.one`) : installe-le depuis le Play Store. Une appli absente
+est simplement sautée. Pour ajouter un site : une ligne dans `raccourcis/sites.json`, puis
+`python3 visuels/vody.py <polices> raccourcis/sites.json` pour sa tuile.
 
 ## Étape 0 : récupérer l'APK du lanceur
 
