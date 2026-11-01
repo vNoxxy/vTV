@@ -4,7 +4,7 @@
 #
 # Usage : powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost 192.168.1.83 [visuels\demarrage.png]
 param(
-    [Parameter(Position = 0)][string]$Image = (Join-Path $PSScriptRoot 'visuels\demarrage.png'),
+    [Parameter(Position = 0)][string]$Image,
     [string]$TvHost = $env:TV_HOST
 )
 $ErrorActionPreference = 'Stop'
@@ -16,6 +16,8 @@ $repo = Join-Path $PSScriptRoot 'cleanyourtv'
 $py = Join-Path $repo 'tools\venv\Scripts\python.exe'
 if (-not (Test-Path $py)) { throw 'Lance d''abord preparer-pc.ps1' }
 $tv = Join-Path $repo 'tools\tv.py'
+# $PSScriptRoot est vide dans les valeurs par défaut de param() sous Windows PowerShell 5.1.
+if (-not $Image) { $Image = Join-Path $PSScriptRoot 'visuels\demarrage.png' }
 $Image = (Resolve-Path $Image).Path
 $nom = [IO.Path]::GetFileName($Image) -replace '[^A-Za-z0-9._-]', '_'
 if ($nom -notmatch '\.(png|jpe?g|webp)$') { throw 'PNG, JPEG ou WebP seulement' }

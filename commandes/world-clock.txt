@@ -1,0 +1,7 @@
+# Les horloges de World Clock : France (heure locale), États-Unis (New York), Japon (Tokyo),
+# Brésil (São Paulo). La Corée (Séoul) a la même heure que Tokyo (UTC+9) : pas de doublon.
+# Écrit le fichier de préférences de l'appli (le shell du boîtier est root), appli arrêtée pour
+# qu'elle ne l'écrase pas en partant.
+am force-stop io.github.savioronezero.worldclock
+d=/data/data/io.github.savioronezero.worldclock; mkdir -p $d/shared_prefs && printf '%s\n' "<?xml version='1.0' encoding='utf-8' standalone='yes' ?>" '<map>' '    <string name="zones_v1">[&quot;@local&quot;,&quot;America/New_York&quot;,&quot;Asia/Tokyo&quot;,&quot;America/Sao_Paulo&quot;]</string>' '</map>' > $d/shared_prefs/world_clock.xml && u=$(stat -c %u $d) && chown -R $u:$u $d/shared_prefs && chmod 771 $d/shared_prefs && chmod 660 $d/shared_prefs/world_clock.xml && restorecon -R $d/shared_prefs && echo ok
+cat /data/data/io.github.savioronezero.worldclock/shared_prefs/world_clock.xml

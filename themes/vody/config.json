@@ -22,5 +22,17 @@
   "app_library": true,
   "tile_menu": true,
   "clock_wallpaper": true,
-  "clock_glow": false
+  "clock_glow": false,
+  "hidden_apps": [
+    "com.cetusplay.remoteservice",
+    "com.droidlogic.FileBrower",
+    "io.github.sumyabazar1.weather",
+    "com.gathin.photodream",
+    "io.github.shivamsingh262.photoprints",
+    "com.gathin.newsdream",
+    "io.github.dennisoleary.digitalrain",
+    "io.github.maxhayim.startupbranding",
+    "io.github.savioronezero.worldclock",
+    "com.rockchips.mediacenter"
+  ]
 }

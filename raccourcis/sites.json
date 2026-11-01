@@ -1,5 +1,3 @@
 [
-  { "id": "cinejoy", "nom": "Cinejoy", "url": "https://cinejoy.pk/" },
-  { "id": "fmhy", "nom": "FMHY", "url": "https://fmhy.net/" },
-  { "id": "youtube", "nom": "YouTube Web", "url": "https://www.youtube.com/" }
+  { "id": "cinejoy", "nom": "Cinejoy", "url": "https://cinejoy.pk/" }
 ]

@@ -26,6 +26,7 @@ Ce dépôt ne recopie pas cleanyourtv. Il contient :
 | `executer.ps1` + `commandes/` | Envoie au boîtier un fichier de commandes et garde sa réponse dans un `.txt`. |
 | `installer-addons.ps1` | Installe les APK du zip `addons-apk` (add-ons et raccourcis). |
 | `image-demarrage.ps1` | Envoie une image à l'add-on Startup & Branding. |
+| `captures.ps1` | Prend des captures d'écran du boîtier (accueil, dock, grille) dans `captures\`. |
 | `listes/` | Les listes d'applis désactivées, par boîtier. |
 | `themes/vody/` | Le thème du lanceur, dans le style de vodystudio.fr. |
 | `raccourcis/` | Une appli par site de `raccourcis/sites.json` : sa tuile sur l'accueil ouvre le site dans Chrome. |
@@ -43,7 +44,9 @@ Depuis `N:\vTV`, après `git pull`, avec `$ip = '192.168.1.83'` :
 | Horloge en écran de veille après 10 min | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\ecran-de-veille.txt` |
 | DNS anti-pub AdGuard (annuler : `dns-annuler.txt`) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\dns-adguard.txt` |
 | Image de l'écran de démarrage (Startup & Branding) | `powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost $ip` |
-| Supprimer les vieilles copies de Trichrome (~700 Mo) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\nettoyer-trichrome.txt` |
+| Retirer les raccourcis YouTube Web et FMHY | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\retirer-sites.txt` |
+| Horloges World Clock (France, New York, Tokyo, São Paulo) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\world-clock.txt` |
+| Captures d'écran à envoyer (dans `captures\`) | `powershell -ExecutionPolicy Bypass -File captures.ps1 -TvHost $ip` |
 
 L'animation de démarrage du boîtier ne se remplace pas : elle est sur une partition système en
 lecture seule, protégée par dm-verity (`ro.boot.veritymode=enforcing`). La lever risque d'empêcher
@@ -178,3 +181,7 @@ Les applis désactivées peuvent revenir. Réactive le débogage et compare :
 ```powershell
 tools\venv\Scripts\python.exe -I tools\check.py <liste>          # ajoute --fix pour réappliquer
 ```
+
+Les anciennes copies de la bibliothèque Trichrome de Chrome (environ 700 Mo) restent : le
+gestionnaire de paquets refuse de les supprimer (`DELETE_FAILED_INTERNAL_ERROR`). Après les
+désinstallations, il reste 2,9 Go libres.
