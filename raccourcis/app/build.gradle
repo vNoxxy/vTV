@@ -20,9 +20,11 @@ android {
         versionName '1.0'
         resValue 'string', 'app_name', siteNom
         resValue 'string', 'site_url', siteUrl
+        // Pas de bannière fournie pour ce site : aucune, et le lanceur montre l'icône.
+        manifestPlaceholders = [banniere: file("../sites/${siteId}/res/drawable-nodpi/banner.png").exists() ? '@drawable/banner' : '@null']
     }
 
-    // La tuile et l'icône du site, dessinées par visuels/vody.py.
+    // L'icône et la bannière du site, celles que le propriétaire a fournies (jamais dessinées ici).
     sourceSets {
         main.res.srcDirs += "../sites/${siteId}/res"
     }

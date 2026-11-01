@@ -28,9 +28,8 @@ Ce dépôt ne recopie pas cleanyourtv. Il contient :
 | `image-demarrage.ps1` | Envoie une image à l'add-on Startup & Branding. |
 | `captures.ps1` | Prend des captures d'écran du boîtier (accueil, dock, grille) dans `captures\`. |
 | `listes/` | Les listes d'applis désactivées, par boîtier. |
-| `themes/vody/` | Le thème du lanceur, dans le style de vodystudio.fr. |
-| `raccourcis/` | Une appli par site de `raccourcis/sites.json` : sa tuile sur l'accueil ouvre le site dans Chrome. |
-| `visuels/` | `vody.py` dessine le fond d'écran, les tuiles des sites et l'image de démarrage. |
+| `themes/premium/` | Le thème du lanceur, façon Apple TV : étagère cinématique, dock en verre, effets avancés. |
+| `raccourcis/` | Une appli par site de `raccourcis/sites.json` : sa tuile sur l'accueil ouvre le site dans Chrome. Icône et bannière fournies par le propriétaire, dans `raccourcis/sites/<id>/res/drawable-nodpi/`. |
 
 ## H96 Max V11 : personnalisation
 
@@ -40,11 +39,11 @@ Depuis `N:\vTV`, après `git pull`, avec `$ip = '192.168.1.83'` :
 |---|---|
 | Désinstaller les applis inutilisées | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\desinstaller.txt` |
 | Installer add-ons et raccourcis (zip `addons-apk` dézippé dans `addons-apk\`) | `powershell -ExecutionPolicy Bypass -File installer-addons.ps1 -TvHost $ip -Dossier .\addons-apk` |
-| Thème Vody (fond, dock, « Bonjour, Timéo ») | `cd cleanyourtv` puis `powershell -ExecutionPolicy Bypass -File tools\theme.ps1 -TvHost $ip ..\themes\vody` |
+| Thème premium (dock, applis masquées, « Bonjour, Timéo ») | `powershell -ExecutionPolicy Bypass -File cleanyourtv\tools\theme.ps1 -TvHost $ip themes\premium` |
 | Horloge en écran de veille après 10 min | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\ecran-de-veille.txt` |
 | DNS anti-pub AdGuard (annuler : `dns-annuler.txt`) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\dns-adguard.txt` |
-| Image de l'écran de démarrage (Startup & Branding) | `powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost $ip` |
-| Retirer les raccourcis YouTube Web et FMHY | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\retirer-sites.txt` |
+| Image de l'écran de démarrage (Startup & Branding) | `powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost $ip C:\chemin\image.png` |
+| Retirer le raccourci YouTube Web | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\retirer-sites.txt` |
 | Horloges World Clock (France, New York, Tokyo, São Paulo) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\world-clock.txt` |
 | Captures d'écran à envoyer (dans `captures\`) | `powershell -ExecutionPolicy Bypass -File captures.ps1 -TvHost $ip` |
 
@@ -69,8 +68,9 @@ Si le port reste ouvert après l'étape 2 (débogage réactivé), `setprop persi
 fait fermer le port 5555 par `init.rk30board.rc` ; `setprop persist.internet_adb_enable 1` le rouvre.
 
 Le dock attend Stremio (`com.stremio.one`) : installe-le depuis le Play Store. Une appli absente
-est simplement sautée. Pour ajouter un site : une ligne dans `raccourcis/sites.json`, puis
-`python3 visuels/vody.py <polices> raccourcis/sites.json` pour sa tuile.
+est simplement sautée. Pour ajouter un site : une ligne dans `raccourcis/sites.json`, et son icône
+(`icon.png`) et sa bannière 320×180 (`banner.png`, facultative) dans
+`raccourcis/sites/<id>/res/drawable-nodpi/`. Sans bannière, le lanceur montre l'icône.
 
 ## Étape 0 : récupérer l'APK du lanceur
 

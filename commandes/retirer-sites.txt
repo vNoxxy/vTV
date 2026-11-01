@@ -1,3 +1,2 @@
-# Désinstalle les raccourcis YouTube Web et FMHY (choix du 2026-11-01). Seul Cinejoy reste.
+# Désinstalle le raccourci YouTube Web (choix du 2026-11-01). Cinejoy et FMHY restent.
 pm uninstall io.github.vnoxxy.vtv.site.youtube
-pm uninstall io.github.vnoxxy.vtv.site.fmhy

@@ -29,7 +29,14 @@ foreach ($apk in $apks) {
     Write-Host "== $($apk.BaseName)"
     & $py -I $b64push $apk.FullName /data/local/tmp/addon.apk
     if ($LASTEXITCODE -ne 0) { $echecs += $apk.BaseName; continue }
-    $sortie = (& $py -I $tv 'pm install -r /data/local/tmp/addon.apk; rm -f /data/local/tmp/addon.apk') -join "`n"
+    $sortie = (& $py -I $tv 'pm install -r /data/local/tmp/addon.apk') -join "`n"
+    # Chaque compilation GitHub signe avec une nouvelle clé : Android refuse alors la mise à jour.
+    # Un raccourci de site n'a pas de données, on le remplace ; un add-on, on le signale seulement.
+    if ($sortie -match 'INSTALL_FAILED_UPDATE_INCOMPATIBLE' -and $apk.BaseName -like 'site-*') {
+        $paquet = 'io.github.vnoxxy.vtv.site.' + $apk.BaseName.Substring(5)
+        $sortie = (& $py -I $tv "pm uninstall $paquet; pm install /data/local/tmp/addon.apk") -join "`n"
+    }
+    & $py -I $tv 'rm -f /data/local/tmp/addon.apk' | Out-Null
     Write-Host $sortie
     if ($sortie -notmatch 'Success') { $echecs += $apk.BaseName }
 }

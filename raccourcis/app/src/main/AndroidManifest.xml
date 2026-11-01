@@ -7,7 +7,7 @@
 
     <application
         android:allowBackup="false"
-        android:banner="@drawable/banner"
+        android:banner="${banniere}"
         android:icon="@drawable/icon"
         android:label="@string/app_name">
 

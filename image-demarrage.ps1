@@ -2,9 +2,9 @@
 # tools\b64push.py puis par le fournisseur de contenu de l'appli, que seul le shell ADB peut écrire.
 # Ensuite, sur le boîtier : Startup & Branding > Custom Image > Picture.
 #
-# Usage : powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost 192.168.1.83 [visuels\demarrage.png]
+# Usage : powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost 192.168.1.83 C:\chemin\image.png
 param(
-    [Parameter(Position = 0)][string]$Image,
+    [Parameter(Mandatory = $true, Position = 0)][string]$Image,
     [string]$TvHost = $env:TV_HOST
 )
 $ErrorActionPreference = 'Stop'
@@ -16,8 +16,6 @@ $repo = Join-Path $PSScriptRoot 'cleanyourtv'
 $py = Join-Path $repo 'tools\venv\Scripts\python.exe'
 if (-not (Test-Path $py)) { throw 'Lance d''abord preparer-pc.ps1' }
 $tv = Join-Path $repo 'tools\tv.py'
-# $PSScriptRoot est vide dans les valeurs par défaut de param() sous Windows PowerShell 5.1.
-if (-not $Image) { $Image = Join-Path $PSScriptRoot 'visuels\demarrage.png' }
 $Image = (Resolve-Path $Image).Path
 $nom = [IO.Path]::GetFileName($Image) -replace '[^A-Za-z0-9._-]', '_'
 if ($nom -notmatch '\.(png|jpe?g|webp)$') { throw 'PNG, JPEG ou WebP seulement' }
