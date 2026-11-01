@@ -33,5 +33,6 @@
   "wifi_status_color": true,
   "greeting_name": "Timéo",
   "app_library": true,
-  "tile_menu": true
+  "tile_menu": true,
+  "cinematic_art": 75
 }
