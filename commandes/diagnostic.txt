@@ -1,0 +1,18 @@
+# Lecture seule : d'où vient l'ADB réseau ouvert sans autorisation, ce qui occupe le stockage,
+# l'écran de veille et le DNS actuels.
+echo "== ADB : proprietes =="
+getprop | grep -i -e adb -e usb.config -e usb.state
+echo "== ADB : reglages =="
+settings get global adb_enabled; settings get global adb_wifi_enabled; settings get global development_settings_enabled
+echo "== ADB : scripts de demarrage qui ouvrent le port =="
+grep -rn -e adb.tcp -e 5555 /system/etc/init /vendor/etc/init /odm/etc/init /init*.rc /system/build.prop /vendor/build.prop 2>/dev/null
+echo "== Stockage : partitions =="
+df -h /data
+echo "== Stockage : 20 plus gros dossiers d'applis (Ko) =="
+du -s /data/data/* /data/app/*/* /data/media/0/Android/data/* 2>/dev/null | sort -n | tail -20
+echo "== Stockage : 15 plus gros dossiers de fichiers (Ko) =="
+du -s /data/media/0/* 2>/dev/null | sort -n | tail -15
+echo "== Ecran de veille =="
+settings get secure screensaver_enabled; settings get secure screensaver_components; settings get system screen_off_timeout
+echo "== DNS prive =="
+settings get global private_dns_mode; settings get global private_dns_specifier

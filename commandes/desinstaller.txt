@@ -1,0 +1,15 @@
+# Désinstalle les applis que le propriétaire n'utilise pas (choix du 2026-11-01). Leurs données
+# partent avec : ce n'est pas annulable, il faudra les réinstaller depuis le Play Store au besoin.
+# Gardées : CetusPlay (com.cetusplay.remoteservice) et AirScreen (com.ionitech.airscreen).
+pm uninstall com.nbaimd.gametime.nba2011
+pm uninstall com.smarters.proiptvvideoplayer
+pm uninstall org.courville.nova
+pm uninstall com.apkpure.aegon
+pm uninstall com.twitter.android
+pm uninstall com.devcoder.devoiptvplayer
+pm uninstall org.xbmc.kodi
+pm uninstall com.netflix.mediaclient
+pm uninstall com.amazon.avod.thirdpartyclient
+pm uninstall com.tvplayerpro.tvplayerproiptvbox
+pm uninstall com.atlasproontv.atlasproontviptvbox
+df -h /data

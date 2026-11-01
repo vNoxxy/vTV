@@ -1,0 +1,19 @@
+# Lecture seule : les règles de démarrage qui ouvrent l'ADB réseau, où est l'animation de
+# démarrage et si la partition système est modifiable, et les copies de la bibliothèque Trichrome
+# (environ 90 Mo chacune) qui remplissent le stockage.
+echo "== init.rk30board.rc, lignes 235 a 255 =="
+sed -n '235,255p' /vendor/etc/init/hw/init.rk30board.rc
+echo "== init.hcy.rc =="
+cat /vendor/etc/init/hw/init.hcy.rc
+echo "== Animation de demarrage : fichiers =="
+ls -l /system/media/bootanimation.zip /product/media/bootanimation.zip /oem/media/bootanimation.zip /vendor/media/bootanimation.zip /odm/media/bootanimation.zip /data/local/bootanimation.zip 2>&1
+echo "== Animation de demarrage : chemins lus par le programme =="
+grep -a -o -e '/[a-z_/]*bootanimation[a-z0-9_.]*' /system/bin/bootanimation | sort -u
+echo "== Partitions et verification (dm-verity) =="
+mount | grep -e ' / ' -e ' /system ' -e ' /vendor ' -e ' /product ' -e ' /oem ' -e ' /odm '
+getprop | grep -i -e verity -e verifiedbootstate -e 'ro.boot.flash.locked'
+echo "== Trichrome : versions installees =="
+pm list packages --show-versioncode | grep -i -e trichrome -e chrome -e webview
+echo "== Trichrome : version utilisee par Chrome et WebView =="
+dumpsys package com.android.chrome | grep -i -A3 -e usesStaticLibraries -e 'versionCode='
+dumpsys package com.google.android.webview | grep -i -A3 -e usesStaticLibraries -e 'versionCode='

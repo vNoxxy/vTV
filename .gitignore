@@ -2,9 +2,7 @@
 cleanyourtv/
 *.apk
 *.zip
-# Résultats de collecter-infos.ps1 (propres à ton boîtier)
-infos-boitier.txt
 accueil.png
-inconnus.txt
 addons-apk/
-diagnostic.txt
+# Réponses du boîtier (collecter-infos.ps1, executer.ps1) : propres à ce boîtier
+/*.txt
