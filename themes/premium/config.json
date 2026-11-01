@@ -34,5 +34,7 @@
   "greeting_name": "Timéo",
   "app_library": true,
   "tile_menu": true,
-  "cinematic_art": 75
+  "cinematic_art": 75,
+  "ambient_glow": false,
+  "settings_key_panel": true
 }

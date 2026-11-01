@@ -1,0 +1,333 @@
+diff --git a/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java b/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
+index 7343ebe4..b43f6618 100644
+--- a/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
++++ b/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
+@@ -783,7 +783,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
+         btnSettings.setOnClickListener(v -> {
+             if (launcherSettingsButton) startActivityForResult(
+                     new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
+-            else open(systemIntent(Settings.ACTION_SETTINGS));
++            // vTV: with settings_key_panel, the gear opens the Settings panel too, not the TV's Settings.
++            else open(settingsKeyPanel ? new Intent(this, QuickSettingsActivity.class)
++                    : systemIntent(Settings.ACTION_SETTINGS));
+         });
+         btnReorder = findViewById(R.id.btnReorder);
+         btnReorder.setOnClickListener(v -> toggleReorder());
+diff --git a/launcher/app/src/main/java/com/gathin/tvhome/QuickSettingsActivity.java b/launcher/app/src/main/java/com/gathin/tvhome/QuickSettingsActivity.java
+index 53783e6f..c24a9ce6 100644
+--- a/launcher/app/src/main/java/com/gathin/tvhome/QuickSettingsActivity.java
++++ b/launcher/app/src/main/java/com/gathin/tvhome/QuickSettingsActivity.java
+@@ -40,15 +40,28 @@ public final class QuickSettingsActivity extends Activity {
+         }
+         findViewById(R.id.scrim).setOnClickListener(v -> finish());
+         LinearLayout rows = findViewById(R.id.rows);
+-        addRow(rows, R.drawable.ic_settings, R.string.tv_settings, 0, SystemSettings.intent(this, Settings.ACTION_SETTINGS));
+-        addRow(rows, R.drawable.ic_picture, R.string.quick_picture, 0, SystemSettings.intent(this, Settings.ACTION_DISPLAY_SETTINGS));
++        // vTV: one row per section of the TV's Settings, so the panel replaces its first screen.
+         addRow(rows, R.drawable.ic_wifi, R.string.quick_network, 0, SystemSettings.intent(this, Settings.ACTION_WIFI_SETTINGS));
++        addRow(rows, R.drawable.ic_picture, R.string.quick_picture, 0, SystemSettings.intent(this, Settings.ACTION_DISPLAY_SETTINGS));
++        addRow(rows, R.drawable.ic_settings, R.string.quick_sound, 0, SystemSettings.intent(this, Settings.ACTION_SOUND_SETTINGS));
++        addRow(rows, R.drawable.ic_settings, R.string.quick_bluetooth, 0, SystemSettings.intent(this, Settings.ACTION_BLUETOOTH_SETTINGS));
+         addRow(rows, R.drawable.ic_apps, R.string.quick_apps, R.string.quick_apps_hint,
+                 SystemSettings.intent(this, Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS));
++        addRow(rows, R.drawable.ic_settings, R.string.quick_storage, 0, SystemSettings.intent(this, Settings.ACTION_INTERNAL_STORAGE_SETTINGS));
++        addRow(rows, R.drawable.ic_settings, R.string.quick_date, 0, SystemSettings.intent(this, Settings.ACTION_DATE_SETTINGS));
++        addRow(rows, R.drawable.ic_settings, R.string.quick_language, 0, SystemSettings.intent(this, Settings.ACTION_LOCALE_SETTINGS));
++        addRow(rows, R.drawable.ic_settings, R.string.quick_about, 0, SystemSettings.intent(this, Settings.ACTION_DEVICE_INFO_SETTINGS));
++        addRow(rows, R.drawable.ic_settings, R.string.tv_settings, 0, SystemSettings.intent(this, Settings.ACTION_SETTINGS));
+         // Through Home, so it rebuilds with the new choices when Launcher settings closes.
+         addRow(rows, R.drawable.ic_home_settings, R.string.launcher_settings, 0,
+                 new Intent(this, MainActivity.class).setAction(MainActivity.ACTION_LAUNCHER_SETTINGS));
+         rows.getChildAt(0).requestFocus();
++        // vTV: the panel slides in from the right edge.
++        View panel = findViewById(R.id.panel);
++        panel.setTranslationX(80 * getResources().getDisplayMetrics().density);
++        panel.setAlpha(0f);
++        panel.animate().translationX(0f).alpha(1f).setDuration(240)
++                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f)).start();
+     }
+ 
+     /** Settings pressed again while the panel is up. */
+@@ -68,7 +81,17 @@ public final class QuickSettingsActivity extends Activity {
+ 
+     private void addRow(LinearLayout rows, int icon, int title, int status, Intent target) {
+         View row = getLayoutInflater().inflate(R.layout.item_input, rows, false);
+-        ((ImageView) row.findViewById(R.id.icon)).setImageResource(icon);
++        // vTV: text rows, as in tvOS settings; the icon parameter stays for the rows cleanyourtv adds.
++        row.findViewById(R.id.icon).setVisibility(View.GONE);
++        ((TextView) row.findViewById(R.id.title)).setTextSize(19);
++        float density = getResources().getDisplayMetrics().density;
++        LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-1, Math.round(60 * density));
++        size.topMargin = Math.round(6 * density);
++        row.setLayoutParams(size);
++        row.setPadding(Math.round(24 * density), 0, Math.round(24 * density), 0);
++        row.setBackgroundResource(R.drawable.settings_choice_bg);
++        ((TextView) row.findViewById(R.id.title)).setTextColor(getColorStateList(R.color.settings_choice_text));
++        row.setStateListAnimator(android.animation.AnimatorInflater.loadStateListAnimator(this, R.animator.settings_lift));
+         ((TextView) row.findViewById(R.id.title)).setText(title);
+         row.findViewById(R.id.dot).setVisibility(View.GONE);
+         TextView hint = row.findViewById(R.id.status);
+diff --git a/launcher/app/src/main/res/animator/settings_lift.xml b/launcher/app/src/main/res/animator/settings_lift.xml
+new file mode 100644
+index 00000000..fef5ff2d
+--- /dev/null
++++ b/launcher/app/src/main/res/animator/settings_lift.xml
+@@ -0,0 +1,20 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- vTV: the focused row grows a little, eased, like a tvOS list. -->
++<selector xmlns:android="http://schemas.android.com/apk/res/android">
++    <item android:state_focused="true">
++        <set>
++            <objectAnimator android:propertyName="scaleX" android:valueTo="1.03" android:duration="160"
++                android:interpolator="@android:interpolator/decelerate_quad" />
++            <objectAnimator android:propertyName="scaleY" android:valueTo="1.03" android:duration="160"
++                android:interpolator="@android:interpolator/decelerate_quad" />
++        </set>
++    </item>
++    <item>
++        <set>
++            <objectAnimator android:propertyName="scaleX" android:valueTo="1" android:duration="160"
++                android:interpolator="@android:interpolator/decelerate_quad" />
++            <objectAnimator android:propertyName="scaleY" android:valueTo="1" android:duration="160"
++                android:interpolator="@android:interpolator/decelerate_quad" />
++        </set>
++    </item>
++</selector>
+diff --git a/launcher/app/src/main/res/color/settings_choice_text.xml b/launcher/app/src/main/res/color/settings_choice_text.xml
+new file mode 100644
+index 00000000..7c644dda
+--- /dev/null
++++ b/launcher/app/src/main/res/color/settings_choice_text.xml
+@@ -0,0 +1,5 @@
++<?xml version="1.0" encoding="utf-8"?>
++<selector xmlns:android="http://schemas.android.com/apk/res/android">
++    <item android:state_focused="true" android:color="#FF0B0C10" />
++    <item android:color="#FFFFFFFF" />
++</selector>
+diff --git a/launcher/app/src/main/res/drawable/settings_choice_bg.xml b/launcher/app/src/main/res/drawable/settings_choice_bg.xml
+index 3539d96e..916ef19f 100644
+--- a/launcher/app/src/main/res/drawable/settings_choice_bg.xml
++++ b/launcher/app/src/main/res/drawable/settings_choice_bg.xml
+@@ -1,23 +1,24 @@
+ <?xml version="1.0" encoding="utf-8"?>
++<!-- vTV: tvOS-style rows. Focused: white, the text turns black (color/settings_choice_text). Chosen: a
++     white rim. At rest: frosted glass. -->
+ <selector xmlns:android="http://schemas.android.com/apk/res/android">
+     <item android:state_focused="true">
+         <shape android:shape="rectangle">
+-            <solid android:color="#5574A987" />
+-            <corners android:radius="14dp" />
+-            <stroke android:width="2dp" android:color="#FFB9E7C7" />
++            <solid android:color="#F2FFFFFF" />
++            <corners android:radius="16dp" />
+         </shape>
+     </item>
+     <item android:state_selected="true">
+         <shape android:shape="rectangle">
+-            <solid android:color="#334DAE6D" />
+-            <corners android:radius="14dp" />
+-            <stroke android:width="1dp" android:color="#FF4DAE6D" />
++            <solid android:color="#26FFFFFF" />
++            <corners android:radius="16dp" />
++            <stroke android:width="2dp" android:color="#B3FFFFFF" />
+         </shape>
+     </item>
+     <item>
+         <shape android:shape="rectangle">
+-            <solid android:color="#FF242B34" />
+-            <corners android:radius="14dp" />
++            <solid android:color="#14FFFFFF" />
++            <corners android:radius="16dp" />
+         </shape>
+     </item>
+ </selector>
+diff --git a/launcher/app/src/main/res/layout/activity_launcher_settings.xml b/launcher/app/src/main/res/layout/activity_launcher_settings.xml
+index b3de8647..5ae26dc3 100644
+--- a/launcher/app/src/main/res/layout/activity_launcher_settings.xml
++++ b/launcher/app/src/main/res/layout/activity_launcher_settings.xml
+@@ -2,7 +2,7 @@
+ <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
+-    android:background="#FF101419"
++    android:background="#FF0A0B0F"
+     android:fillViewport="true">
+ 
+     <LinearLayout
+@@ -19,7 +19,8 @@
+             android:layout_height="wrap_content"
+             android:text="@string/launcher_settings"
+             android:textColor="#FFFFFFFF"
+-            android:textSize="34sp" />
++            android:textStyle="bold"
++            android:textSize="40sp" />
+ 
+         <TextView
+             android:id="@+id/reorderChoice"
+@@ -33,8 +34,10 @@
+             android:layout_height="wrap_content"
+             android:layout_marginTop="28dp"
+             android:text="@string/columns_label"
+-            android:textColor="#FFFFFFFF"
+-            android:textSize="20sp" />
++            android:textColor="#8CFFFFFF"
++            android:textAllCaps="true"
++            android:letterSpacing="0.08"
++            android:textSize="15sp" />
+ 
+         <LinearLayout
+             android:layout_width="match_parent"
+@@ -53,8 +56,10 @@
+             android:layout_height="wrap_content"
+             android:layout_marginTop="18dp"
+             android:text="@string/rows_below_dock_label"
+-            android:textColor="#FFFFFFFF"
+-            android:textSize="20sp" />
++            android:textColor="#8CFFFFFF"
++            android:textAllCaps="true"
++            android:letterSpacing="0.08"
++            android:textSize="15sp" />
+ 
+         <LinearLayout
+             android:layout_width="match_parent"
+@@ -73,8 +78,10 @@
+             android:layout_height="wrap_content"
+             android:layout_marginTop="18dp"
+             android:text="@string/dock_opacity_label"
+-            android:textColor="#FFFFFFFF"
+-            android:textSize="20sp" />
++            android:textColor="#8CFFFFFF"
++            android:textAllCaps="true"
++            android:letterSpacing="0.08"
++            android:textSize="15sp" />
+ 
+         <LinearLayout
+             android:layout_width="match_parent"
+diff --git a/launcher/app/src/main/res/layout/activity_quick_settings.xml b/launcher/app/src/main/res/layout/activity_quick_settings.xml
+index 93a90a9f..deb18a64 100644
+--- a/launcher/app/src/main/res/layout/activity_quick_settings.xml
++++ b/launcher/app/src/main/res/layout/activity_quick_settings.xml
+@@ -1,28 +1,47 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<!-- Quick settings opened by the remote's Settings button: the Inputs dropdown's glass panel, placed
+-     under the Settings pill so it lines up on Home and sits top right over any app. -->
++<!-- vTV: the Settings panel, tvOS style: a full-height frosted column on the right with a title and
++     one row per section of the TV's Settings. -->
+ <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     android:id="@+id/scrim"
+     android:layout_width="match_parent"
+-    android:layout_height="match_parent">
++    android:layout_height="match_parent"
++    android:background="#99000000">
+ 
+     <LinearLayout
+         android:id="@+id/panel"
+-        android:layout_width="wrap_content"
+-        android:minWidth="220dp"
+-        android:layout_height="wrap_content"
+-        android:layout_gravity="top|end"
+-        android:layout_marginTop="105dp"
+-        android:layout_marginEnd="56dp"
++        android:layout_width="460dp"
++        android:layout_height="match_parent"
++        android:layout_gravity="end"
+         android:orientation="vertical"
+-        android:background="@drawable/glass_panel"
+-        android:padding="6dp"
+-        android:elevation="12dp">
++        android:background="#F20E0F14"
++        android:paddingStart="28dp"
++        android:paddingEnd="28dp"
++        android:paddingTop="44dp"
++        android:elevation="16dp">
+ 
+-        <LinearLayout
+-            android:id="@+id/rows"
++        <TextView
++            android:id="@+id/panelTitle"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+-            android:orientation="vertical" />
++            android:layout_marginBottom="18dp"
++            android:paddingStart="12dp"
++            android:text="@string/quick_title"
++            android:textColor="#FFFFFFFF"
++            android:textSize="32sp"
++            android:textStyle="bold" />
++
++        <ScrollView
++            android:layout_width="match_parent"
++            android:layout_height="0dp"
++            android:layout_weight="1"
++            android:clipToPadding="false"
++            android:paddingBottom="28dp">
++
++            <LinearLayout
++                android:id="@+id/rows"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:orientation="vertical" />
++        </ScrollView>
+     </LinearLayout>
+ </FrameLayout>
+diff --git a/launcher/app/src/main/res/values-fr/strings.xml b/launcher/app/src/main/res/values-fr/strings.xml
+index e416d3e1..e97dd8f4 100644
+--- a/launcher/app/src/main/res/values-fr/strings.xml
++++ b/launcher/app/src/main/res/values-fr/strings.xml
+@@ -95,4 +95,12 @@
+     <string name="greeting_with_name">%1$s, %2$s</string>
+     <string name="last_opened">Dernière ouverture : %1$s</string>
+     <string name="game_live">En direct</string>
++    <!-- vTV : le panneau Réglages et ses sections. -->
++    <string name="quick_title">Réglages</string>
++    <string name="quick_sound">Son</string>
++    <string name="quick_bluetooth">Télécommandes et Bluetooth</string>
++    <string name="quick_storage">Stockage</string>
++    <string name="quick_date">Date et heure</string>
++    <string name="quick_language">Langue</string>
++    <string name="quick_about">À propos</string>
+ </resources>
+diff --git a/launcher/app/src/main/res/values/strings.xml b/launcher/app/src/main/res/values/strings.xml
+index e6557662..fa1d3131 100644
+--- a/launcher/app/src/main/res/values/strings.xml
++++ b/launcher/app/src/main/res/values/strings.xml
+@@ -70,6 +70,14 @@
+     <string name="quick_network">Network</string>
+     <string name="quick_apps">Apps</string>
+     <string name="quick_apps_hint">Re-enable</string>
++    <!-- vTV: the Settings panel's title and its extra sections. -->
++    <string name="quick_title">Settings</string>
++    <string name="quick_sound">Sound</string>
++    <string name="quick_bluetooth">Remotes &amp; Bluetooth</string>
++    <string name="quick_storage">Storage</string>
++    <string name="quick_date">Date &amp; time</string>
++    <string name="quick_language">Language</string>
++    <string name="quick_about">About</string>
+     <string name="on">On</string>
+     <string name="off">Off</string>
+     <string name="enable">Enable</string>
+diff --git a/launcher/app/src/main/res/values/styles.xml b/launcher/app/src/main/res/values/styles.xml
+index 25089128..e16b9a38 100644
+--- a/launcher/app/src/main/res/values/styles.xml
++++ b/launcher/app/src/main/res/values/styles.xml
+@@ -37,13 +37,15 @@
+ 
+     <style name="SettingsRow">
+         <item name="android:layout_width">match_parent</item>
+-        <item name="android:layout_height">52dp</item>
++        <item name="android:layout_height">60dp</item>
+         <item name="android:gravity">center_vertical</item>
+-        <item name="android:paddingStart">18dp</item>
+-        <item name="android:paddingEnd">18dp</item>
++        <item name="android:paddingStart">24dp</item>
++        <item name="android:paddingEnd">24dp</item>
++        <item name="android:layout_marginTop">6dp</item>
+         <item name="android:background">@drawable/settings_choice_bg</item>
+-        <item name="android:textColor">#FFFFFFFF</item>
+-        <item name="android:textSize">18sp</item>
++        <item name="android:textColor">@color/settings_choice_text</item>
++        <item name="android:textSize">19sp</item>
++        <item name="android:stateListAnimator">@animator/settings_lift</item>
+         <item name="android:focusable">true</item>
+         <item name="android:clickable">true</item>
+     </style>
