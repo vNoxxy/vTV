@@ -4,6 +4,8 @@ en JetBrains Mono, accent #2485ea, ni dégradé ni halo.
 
 Usage : python3 visuels/vody.py <dossier des polices> themes/vody/wallpaper.jpg
         python3 visuels/vody.py <dossier des polices> raccourcis/sites.json   (tuiles des sites)
+        python3 visuels/vody.py - visuels/bootanimation.zip                  (animation de démarrage)
+        python3 visuels/vody.py - visuels/demarrage.png                      (image Startup & Branding)
 Polices (licence OFL) : Syne 800 et JetBrains Mono 500/700, des paquets npm @fontsource/syne et
 @fontsource/jetbrains-mono, converties en TTF (Syne-800.ttf, JBM-500.ttf, JBM-700.ttf).
 """
@@ -78,6 +80,50 @@ def fond_ecran(polices, sortie):
     im.save(sortie, quality=88, optimize=True)
 
 
+def ecran_chargement(progression):
+    """L'écran de chargement du site (.boot de frontend/index.html) à l'échelle d'une télé 1080p :
+    le logo 56 px aux coins de 9 px, 22 px d'écart, la barre de 132 × 2 px dont un tiers glisse.
+    `progression` va de 0 (barre à gauche) à 1 (à droite)."""
+    e = 2.5
+    im = Image.new("RGB", (W, H), BG)
+    t, r = round(56 * e), round(9 * e)
+    bl, bh, ecart = round(132 * e), round(2 * e), round(22 * e)
+    haut = t + ecart + bh
+    x, y = (W - t) // 2, (H - haut) // 2
+    masque = Image.new("L", (t, t), 0)
+    ImageDraw.Draw(masque).rounded_rectangle([0, 0, t - 1, t - 1], radius=r, fill=255)
+    im.paste(logo(t), (x, y), masque)
+    d = ImageDraw.Draw(im)
+    bx, by = (W - bl) // 2, y + t + ecart
+    d.rectangle([bx, by, bx + bl - 1, by + bh - 1], fill=blend((255, 255, 255), 0.16))
+    # .boot-bar::after : inset 0 62% 0 0, translateX jusqu'à 164 % de sa largeur.
+    rempli = bl * 0.38
+    gauche = bx + progression * 1.64 * rempli
+    d.rectangle([round(gauche), by, round(min(gauche + rempli, bx + bl)) - 1, by + bh - 1], fill=ACCENT)
+    return im
+
+
+def animation_demarrage(sortie):
+    """bootanimation.zip : la barre fait l'aller-retour en 1 s comme sur le site (ease-in-out,
+    alternate), 30 images par seconde, en boucle jusqu'à la fin du démarrage. Zip sans compression,
+    comme Android l'exige."""
+    import math
+    import tempfile
+    import zipfile
+
+    fps = 30
+    images = []
+    for i in range(2 * fps):
+        p = (i % fps) / fps if i < fps else 1 - (i % fps) / fps
+        images.append(ecran_chargement((1 - math.cos(math.pi * p)) / 2))
+    with tempfile.TemporaryDirectory() as tmp, zipfile.ZipFile(sortie, "w", zipfile.ZIP_STORED) as z:
+        z.writestr("desc.txt", f"{W} {H} {fps}\np 0 0 part0\n")
+        for i, im in enumerate(images):
+            f = os.path.join(tmp, f"{i:05d}.png")
+            im.save(f, optimize=True)
+            z.write(f, f"part0/{i:05d}.png")
+
+
 def ajuster(d, texte, nom, polices, taille, largeur):
     """La plus grande taille, jusqu'à `taille`, où le texte tient dans `largeur`."""
     while taille > 10 and d.textlength(texte, font=police(polices, nom, taille)) > largeur:
@@ -114,7 +160,11 @@ if __name__ == "__main__":
     import json
 
     polices, cible = sys.argv[1], sys.argv[2]
-    if cible.endswith(".json"):
+    if cible.endswith("bootanimation.zip"):
+        animation_demarrage(cible)
+    elif cible.endswith("demarrage.png"):
+        ecran_chargement(0.5).save(cible, optimize=True)
+    elif cible.endswith(".json"):
         # raccourcis/sites.json : une tuile par site, numérotées dans l'ordre de la liste.
         sites = json.load(open(cible, encoding="utf-8"))
         for i, site in enumerate(sites, 1):
