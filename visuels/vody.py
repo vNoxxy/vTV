@@ -4,7 +4,6 @@ en JetBrains Mono, accent #2485ea, ni dégradé ni halo.
 
 Usage : python3 visuels/vody.py <dossier des polices> themes/vody/wallpaper.jpg
         python3 visuels/vody.py <dossier des polices> raccourcis/sites.json   (tuiles des sites)
-        python3 visuels/vody.py - visuels/bootanimation.zip                  (animation de démarrage)
         python3 visuels/vody.py - visuels/demarrage.png                      (image Startup & Branding)
 Polices (licence OFL) : Syne 800 et JetBrains Mono 500/700, des paquets npm @fontsource/syne et
 @fontsource/jetbrains-mono, converties en TTF (Syne-800.ttf, JBM-500.ttf, JBM-700.ttf).
@@ -103,27 +102,6 @@ def ecran_chargement(progression):
     return im
 
 
-def animation_demarrage(sortie):
-    """bootanimation.zip : la barre fait l'aller-retour en 1 s comme sur le site (ease-in-out,
-    alternate), 30 images par seconde, en boucle jusqu'à la fin du démarrage. Zip sans compression,
-    comme Android l'exige."""
-    import math
-    import tempfile
-    import zipfile
-
-    fps = 30
-    images = []
-    for i in range(2 * fps):
-        p = (i % fps) / fps if i < fps else 1 - (i % fps) / fps
-        images.append(ecran_chargement((1 - math.cos(math.pi * p)) / 2))
-    with tempfile.TemporaryDirectory() as tmp, zipfile.ZipFile(sortie, "w", zipfile.ZIP_STORED) as z:
-        z.writestr("desc.txt", f"{W} {H} {fps}\np 0 0 part0\n")
-        for i, im in enumerate(images):
-            f = os.path.join(tmp, f"{i:05d}.png")
-            im.save(f, optimize=True)
-            z.write(f, f"part0/{i:05d}.png")
-
-
 def ajuster(d, texte, nom, polices, taille, largeur):
     """La plus grande taille, jusqu'à `taille`, où le texte tient dans `largeur`."""
     while taille > 10 and d.textlength(texte, font=police(polices, nom, taille)) > largeur:
@@ -160,9 +138,7 @@ if __name__ == "__main__":
     import json
 
     polices, cible = sys.argv[1], sys.argv[2]
-    if cible.endswith("bootanimation.zip"):
-        animation_demarrage(cible)
-    elif cible.endswith("demarrage.png"):
+    if cible.endswith("demarrage.png"):
         ecran_chargement(0.5).save(cible, optimize=True)
     elif cible.endswith(".json"):
         # raccourcis/sites.json : une tuile par site, numérotées dans l'ordre de la liste.

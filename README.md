@@ -29,7 +29,7 @@ Ce dépôt ne recopie pas cleanyourtv. Il contient :
 | `listes/` | Les listes d'applis désactivées, par boîtier. |
 | `themes/vody/` | Le thème du lanceur, dans le style de vodystudio.fr. |
 | `raccourcis/` | Une appli par site de `raccourcis/sites.json` : sa tuile sur l'accueil ouvre le site dans Chrome. |
-| `visuels/` | `vody.py` dessine le fond d'écran, les tuiles des sites et l'écran de chargement. |
+| `visuels/` | `vody.py` dessine le fond d'écran, les tuiles des sites et l'image de démarrage. |
 
 ## H96 Max V11 : personnalisation
 
@@ -43,6 +43,27 @@ Depuis `N:\vTV`, après `git pull`, avec `$ip = '192.168.1.83'` :
 | Horloge en écran de veille après 10 min | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\ecran-de-veille.txt` |
 | DNS anti-pub AdGuard (annuler : `dns-annuler.txt`) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\dns-adguard.txt` |
 | Image de l'écran de démarrage (Startup & Branding) | `powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost $ip` |
+| Supprimer les vieilles copies de Trichrome (~700 Mo) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\nettoyer-trichrome.txt` |
+
+L'animation de démarrage du boîtier ne se remplace pas : elle est sur une partition système en
+lecture seule, protégée par dm-verity (`ro.boot.veritymode=enforcing`). La lever risque d'empêcher
+le boîtier de démarrer.
+
+### Refermer l'ADB réseau (à la fin)
+
+Ce firmware ouvre l'ADB sur le port 5555 sans demander d'autorisation et en root
+(`ro.adb.secure=0`). Deux scripts du fabricant s'en chargent : `init.rk30board.rc` ouvre le port
+tant que `persist.internet_adb_enable=1`, et `init.hcy.rc` remet `service.adb.tcp.port=5555` à
+chaque démarrage sans redémarrer adbd.
+
+1. Quand tout est réglé : Options pour les développeurs → désactive **Débogage USB** (adbd s'arrête).
+2. Redémarre le boîtier, puis vérifie depuis le PC :
+   `cleanyourtv\tools\venv\Scripts\python.exe -I cleanyourtv\tools\adb-closed.py 192.168.1.83`
+   doit dire que le port est fermé.
+3. Pour modifier à nouveau : réactive **Débogage USB**. adbd redémarre sur le port 5555.
+
+Si le port reste ouvert après l'étape 2 (débogage réactivé), `setprop persist.internet_adb_enable 0`
+fait fermer le port 5555 par `init.rk30board.rc` ; `setprop persist.internet_adb_enable 1` le rouvre.
 
 Le dock attend Stremio (`com.stremio.one`) : installe-le depuis le Play Store. Une appli absente
 est simplement sautée. Pour ajouter un site : une ligne dans `raccourcis/sites.json`, puis
