@@ -37,15 +37,21 @@ com.google.android.printservice.recommendation  # suggestions de services d'impr
 com.cghs.stresstest                      # test d'endurance du fabricant
 com.rockchip.devicetest                  # test matériel Rockchip
 
-# À décider (enlève le # pour désactiver)
-# com.google.android.katniss             # Assistant Google et recherche vocale : le micro de la télécommande ne servira plus
-# android.rockchip.update.service        # mises à jour firmware du fabricant (dernier firmware : octobre 2021)
-# org.mozilla.tv.firefox                 # Firefox pour TV, abandonné par Mozilla ; Chrome reste
-# com.gaoee.led                          # afficheur LED en façade : la désactiver peut éteindre l'horloge
-# com.example.changeled                  # idem, réglage de l'afficheur LED
+# Choix du propriétaire (2026-11-01)
+com.google.android.katniss               # Assistant Google et recherche vocale : le micro n'est pas utilisé
+com.actions.hidaudio                     # micro des télécommandes Bluetooth (HidAudio.apk), tournait en permanence
+android.rockchip.update.service          # mises à jour firmware du fabricant (dernier firmware : octobre 2021)
+org.mozilla.tv.firefox                   # Firefox pour TV, abandonné par Mozilla ; Chrome reste
+com.gaoee.led                            # afficheur LED en façade
+com.example.changeled                    # réglage de l'afficheur LED
 
-# À inspecter avant de décider : noms non standard, rôle inconnu
-# com.example.a
+# Outils du fabricant identifiés par leur APK
+com.example.a                            # /system/app/ProductTest : test d'usine, ne tourne pas
+com.hkw.simplelauncher                   # /system/app/SimpleAllApp : grille « My APPS » de l'accueil d'origine
+
+# Gardé pour l'instant : /system/priv-app/ShowDebug, tourne en permanence sous l'identité système,
+# rôle inconnu. À désactiver seul, en dernier, pour pouvoir l'annuler s'il sert à l'affichage :
+#   tools\venv\Scripts\python.exe -I tools\tv.py 'pm disable-user --user 0 com.android.show'
+# Annuler :
+#   tools\venv\Scripts\python.exe -I tools\tv.py 'pm enable com.android.show'
 # com.android.show
-# com.hkw.simplelauncher
-# com.actions.hidaudio
