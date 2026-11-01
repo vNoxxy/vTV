@@ -1,5 +1,6 @@
-# Compile le lanceur de cleanyourtv (version épinglée dans cleanyourtv.commit) et publie l'APK
-# comme artefact du run : onglet Actions → dernier run → Artifacts → lanceur-apk.
+# Compile le lanceur et les add-ons de cleanyourtv (version épinglée dans cleanyourtv.commit) et
+# publie les APK comme artefacts du run : onglet Actions → dernier run → Artifacts → lanceur-apk
+# et addons-apk.
 name: Compiler l'APK du lanceur
 
 on:
@@ -44,4 +45,73 @@ jobs:
         with:
           name: lanceur-apk
           path: cleanyourtv/launcher/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+
+  # Les add-ons de cleanyourtv, à la même version. Chacun dans son job : un add-on qui casse
+  # n'empêche pas les autres d'être compilés.
+  addon:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { nom: tv-hub, tache: assembleDebug, sortie: debug/app-debug.apk }
+          - { nom: sleep-timer, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: weather, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: world-clock, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: photo-screensaver, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: photo-prints, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: news-screensaver, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: digital-rain, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: startup-branding, tache: assembleRelease, sortie: release/app-release.apk }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Version de cleanyourtv à compiler
+        id: amont
+        run: echo "commit=$(tr -d '[:space:]' < cleanyourtv.commit)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: Gathin23/cleanyourtv
+          ref: ${{ steps.amont.outputs.commit }}
+          path: cleanyourtv
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platforms;android-34 build-tools;34.0.0
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      - name: Build ${{ matrix.nom }}
+        working-directory: cleanyourtv/addons/${{ matrix.nom }}
+        run: |
+          # Certains add-ons appellent le gradlew du lanceur depuis le leur.
+          chmod +x gradlew ../../launcher/gradlew
+          ./gradlew --no-daemon ${{ matrix.tache }}
+          mkdir -p "$GITHUB_WORKSPACE/sortie"
+          cp "app/build/outputs/apk/${{ matrix.sortie }}" "$GITHUB_WORKSPACE/sortie/${{ matrix.nom }}.apk"
+          sha256sum "$GITHUB_WORKSPACE/sortie/${{ matrix.nom }}.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: addon-${{ matrix.nom }}
+          path: sortie/${{ matrix.nom }}.apk
+          if-no-files-found: error
+
+  # Un seul zip à télécharger : Artifacts → addons-apk.
+  addons-apk:
+    needs: addon
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: addon-*
+          path: addons-apk
+          merge-multiple: true
+      - run: ls -l addons-apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: addons-apk
+          path: addons-apk/*.apk
           if-no-files-found: error
