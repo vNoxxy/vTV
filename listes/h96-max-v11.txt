@@ -1,0 +1,51 @@
+# H96 Max V11 (Rockchip RK3318, device rk3328_box), Android 11 (SDK 30), 2 Go RAM, 16 Go.
+# Firmware rk3328_box-userdebug 11 RQ2A.210505.003 eng.pc.20211029.102843 (octobre 2021).
+# Fingerprint: Rockchip/rk3328_box/rk3328_box:11/RQ2A.210505.003/eng.pc.20211029.102843:userdebug/release-keys
+#
+# Appliquer (depuis le dossier cleanyourtv) :
+#   powershell -ExecutionPolicy Bypass -File tools\disable.ps1 -TvHost <ip> ..\listes\h96-max-v11.txt
+# Annuler :
+#   powershell -ExecutionPolicy Bypass -File tools\restore.ps1 -TvHost <ip> -Stock com.droidlogic.mboxlauncher ..\listes\h96-max-v11.txt
+# Tout est DÉSACTIVÉ, rien n'est désinstallé. Mets un # devant une ligne pour garder l'appli.
+#
+# Constaté sur ce boîtier (collecte du 2026-11-01) :
+# - ADB réseau ouvert d'origine sur le port 5555 (service.adb.tcp.port=5555), sans demande
+#   d'autorisation (ro.adb.secure=0) et avec un shell root (uid=0) : n'importe quel appareil du
+#   réseau local a le root sans rien demander.
+# - Accueil d'origine : com.droidlogic.mboxlauncher, que les scripts ne connaissent pas. Passer
+#   -StockLauncher com.droidlogic.mboxlauncher à launcher\build-and-install.ps1. Il n'est pas listé
+#   ici : le script d'installation le désactive seulement après avoir vérifié que le nouveau démarre.
+# - Pas de feature android.software.leanback (le lanceur ne l'exige pas) ; /data plein à 89 %.
+#
+# À garder : com.android.vending (Play Store), com.google.android.gms / gsf, com.google.android.youtube.tv,
+# com.android.chrome et com.google.android.webview (navigateur, sites), com.android.tv.settings
+# (Paramètres et FallbackHome), com.android.settings, com.mbx.settingsmbox (réglages du boîtier),
+# com.droidlogic.FileBrower (My Files), com.android.inputmethod.latin (clavier), com.android.bluetooth.
+
+# Télémétrie Google (signalée par l'audit tools\privacy.py)
+com.google.android.partnersetup          # pings d'attribution partenaire (RLZ), aussi au démarrage
+com.google.android.feedback              # envoi de rapports à Google
+
+# Applis de téléphone sans usage sur un boîtier TV
+com.google.android.projection.gearhead   # Android Auto
+com.google.android.apps.wellbeing        # Bien-être numérique
+com.google.android.gms.location.history  # historique des positions
+com.google.android.apps.restore          # restauration des données d'un ancien téléphone
+com.google.android.printservice.recommendation  # suggestions de services d'impression
+
+# Tests d'usine
+com.cghs.stresstest                      # test d'endurance du fabricant
+com.rockchip.devicetest                  # test matériel Rockchip
+
+# À décider (enlève le # pour désactiver)
+# com.google.android.katniss             # Assistant Google et recherche vocale : le micro de la télécommande ne servira plus
+# android.rockchip.update.service        # mises à jour firmware du fabricant (dernier firmware : octobre 2021)
+# org.mozilla.tv.firefox                 # Firefox pour TV, abandonné par Mozilla ; Chrome reste
+# com.gaoee.led                          # afficheur LED en façade : la désactiver peut éteindre l'horloge
+# com.example.changeled                  # idem, réglage de l'afficheur LED
+
+# À inspecter avant de décider : noms non standard, rôle inconnu
+# com.example.a
+# com.android.show
+# com.hkw.simplelauncher
+# com.actions.hidaudio
