@@ -28,6 +28,9 @@ Ce dépôt ne recopie pas cleanyourtv. Il contient :
 | `image-demarrage.ps1` | Envoie une image à l'add-on Startup & Branding. |
 | `captures.ps1` | Prend des captures d'écran du boîtier (accueil, dock, grille) dans `captures\`. |
 | `listes/` | Les listes d'applis désactivées, par boîtier. |
+| `lanceur/patchs/` | Les modifications vTV du lanceur, appliquées par GitHub Actions : photo de fond par appli, bibliothèque plein écran, réglages façon tvOS. |
+| `signature/` | La clé fixe qui signe le lanceur, les add-ons et les raccourcis (mises à jour par-dessus). |
+| `reinstaller-lanceur.ps1`, `appliquer-theme.ps1` | Installer le lanceur patché, envoyer le thème et ses photos `art/`. |
 | `themes/premium/` | Le thème du lanceur, façon Apple TV : étagère cinématique, dock en verre, effets avancés. |
 | `raccourcis/` | Une appli par site de `raccourcis/sites.json` : sa tuile sur l'accueil ouvre le site dans Chrome. Icône et bannière fournies par le propriétaire, dans `raccourcis/sites/<id>/res/drawable-nodpi/`. |
 
@@ -39,7 +42,8 @@ Depuis `N:\vTV`, après `git pull`, avec `$ip = '192.168.1.83'` :
 |---|---|
 | Désinstaller les applis inutilisées | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\desinstaller.txt` |
 | Installer add-ons et raccourcis (zip `addons-apk` dézippé dans `addons-apk\`) | `powershell -ExecutionPolicy Bypass -File installer-addons.ps1 -TvHost $ip -Dossier .\addons-apk` |
-| Thème premium (dock, applis masquées, « Bonjour, Timéo ») | `powershell -ExecutionPolicy Bypass -File cleanyourtv\tools\theme.ps1 -TvHost $ip themes\premium` |
+| Mettre à jour le lanceur (zip `lanceur-apk`) | `powershell -ExecutionPolicy Bypass -File reinstaller-lanceur.ps1 -TvHost $ip -Apk .\app-release.apk -MiseAJour` |
+| Thème premium et photos de fond (dock, applis masquées, « Bonjour, Timéo ») | `powershell -ExecutionPolicy Bypass -File appliquer-theme.ps1 -TvHost $ip` |
 | Horloge en écran de veille après 10 min | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\ecran-de-veille.txt` |
 | DNS anti-pub AdGuard (annuler : `dns-annuler.txt`) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\dns-adguard.txt` |
 | Image de l'écran de démarrage (Startup & Branding) | `powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost $ip C:\chemin\image.png` |

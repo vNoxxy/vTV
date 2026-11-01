@@ -3,9 +3,13 @@
 # L'accueil d'origine reprend la main entre les deux, pour que le boîtier ne reste jamais sans accueil.
 # Les réglages faits sur le boîtier dans le lanceur (ordre, bibliothèque) sont perdus ; le thème se renvoie.
 #
-# Usage : powershell -ExecutionPolicy Bypass -File reinstaller-lanceur.ps1 -TvHost 192.168.1.83 -Apk .\app-release.apk
+# Avec -MiseAJour : une nouvelle version signée avec la même clé s'installe par-dessus, sans désinstaller
+# ni perdre les réglages (étapes 1 et 2 sautées).
+#
+# Usage : powershell -ExecutionPolicy Bypass -File reinstaller-lanceur.ps1 -TvHost 192.168.1.83 -Apk .\app-release.apk [-MiseAJour]
 param(
     [Parameter(Mandatory = $true)][string]$Apk,
+    [switch]$MiseAJour,
     [string]$Accueil = 'com.droidlogic.mboxlauncher',
     [string]$TvHost = $env:TV_HOST
 )
@@ -20,6 +24,7 @@ if (-not (Test-Path $py)) { throw 'Lance d''abord preparer-pc.ps1' }
 $tv = Join-Path $repo 'tools\tv.py'
 $Apk = (Resolve-Path $Apk).Path
 
+if (-not $MiseAJour) {
 # 1. L'accueil d'origine réactivé et remis en accueil : il démarre tout de suite.
 $sortie = (& $py -I $tv "pm enable $Accueil; cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME -p $Accueil") -join "`n"
 Write-Host $sortie
@@ -29,6 +34,7 @@ if (-not $composant) { throw "L'accueil d'origine $Accueil ne répond pas : rien
 
 # 2. L'ancien lanceur désinstallé.
 & $py -I $tv 'pm uninstall com.gathin.tvhome' | Write-Host
+}
 
 # 3. Le nouveau, installé par le script de cleanyourtv : il vérifie qu'il démarre avant de désactiver
 #    l'accueil d'origine.
@@ -38,4 +44,4 @@ Copy-Item $Apk (Join-Path $dest 'app-release.apk') -Force
 $env:SKIP_BUILD = '1'
 & powershell -ExecutionPolicy Bypass -File (Join-Path $repo 'launcher\build-and-install.ps1') -TvHost $TvHost -StockLauncher $Accueil
 if ($LASTEXITCODE -ne 0) { throw "Installation du lanceur échouée : l'accueil d'origine reste actif." }
-Write-Host 'Lanceur réinstallé. Renvoie le thème : cleanyourtv\tools\theme.ps1 -TvHost <ip> themes\premium'
+Write-Host 'Lanceur installé. Renvoie le thème : appliquer-theme.ps1 -TvHost <ip>'
