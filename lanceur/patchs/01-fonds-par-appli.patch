@@ -1,0 +1,119 @@
+diff --git a/launcher/app/src/main/java/com/gathin/tvhome/HeroArt.java b/launcher/app/src/main/java/com/gathin/tvhome/HeroArt.java
+index c2071aa1..240af2f2 100644
+--- a/launcher/app/src/main/java/com/gathin/tvhome/HeroArt.java
++++ b/launcher/app/src/main/java/com/gathin/tvhome/HeroArt.java
+@@ -1,10 +1,12 @@
+ package com.gathin.tvhome;
+ 
+ import android.graphics.Bitmap;
++import android.graphics.BitmapFactory;
+ import android.graphics.Canvas;
+ import android.graphics.Color;
+ import android.graphics.Rect;
+ import android.graphics.drawable.Drawable;
++import java.io.File;
+ 
+ /**
+  * The cinematic shelf's backdrop: an app's artwork reduced to 48×27 pixels, saturated and smoothed,
+@@ -19,6 +21,31 @@ final class HeroArt {
+     private HeroArt() {
+     }
+ 
++    /**
++     * vTV: the theme's photo for this app, art/<package>.jpg, shown as it is instead of the softened
++     * artwork. Decoded at about half the screen's width in RGB_565 (about 1 MB at 960×540), which the
++     * shelf's ImageView crops to the screen; null when the theme has none or it cannot be read.
++     */
++    static Bitmap photo(File themeDir, String pkg) {
++        if (themeDir == null || pkg == null) return null;
++        File f = new File(new File(themeDir, ThemeFiles.ART), pkg + ".jpg");
++        if (!f.isFile()) return null;
++        BitmapFactory.Options bounds = new BitmapFactory.Options();
++        bounds.inJustDecodeBounds = true;
++        BitmapFactory.decodeFile(f.getPath(), bounds);
++        if (bounds.outWidth <= 0) return null;
++        BitmapFactory.Options o = new BitmapFactory.Options();
++        o.inPreferredConfig = Bitmap.Config.RGB_565;
++        while (bounds.outWidth / (o.inSampleSize == 0 ? 1 : o.inSampleSize) > 1920) {
++            o.inSampleSize = o.inSampleSize == 0 ? 2 : o.inSampleSize * 2;
++        }
++        Bitmap b = BitmapFactory.decodeFile(f.getPath(), o);
++        if (b == null || b.getWidth() <= 960) return b;
++        Bitmap scaled = Bitmap.createScaledBitmap(b, 960, Math.max(1, b.getHeight() * 960 / b.getWidth()), true);
++        if (scaled != b) b.recycle();
++        return scaled;
++    }
++
+     /** The softened artwork, about 5 KB; null when there is nothing to draw. */
+     static Bitmap from(Drawable live) {
+         if (live == null) return null;
+diff --git a/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java b/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
+index fd97c542..7343ebe4 100644
+--- a/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
++++ b/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
+@@ -1928,17 +1928,24 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
+         }
+         Bitmap art = heroArtCache.get(key);
+         if (art == null) {
+-            art = HeroArt.from(adapter.artworkAt(position));
++            // vTV: the theme's photo of the app first, else its softened banner.
++            art = HeroArt.photo(Config.dir(this), adapter.packageAt(position));
++            if (art == null) art = HeroArt.from(adapter.artworkAt(position));
+             if (art != null) heroArtCache.put(key, art);
+         }
+         heroArtKey = key;
+         final Bitmap next = art;
++        // A photo keeps its proportions; the 48×27 softened artwork is stretched like a blur.
++        final ImageView.ScaleType fit = art != null && art.getWidth() > HeroArt.W
++                ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_XY;
+         if (!animations || reducedMotion || heroArt.getAlpha() == 0f) {
++            heroArt.setScaleType(fit);
+             heroArt.setImageBitmap(next);
+             fadeHeroArt(600);
+             return;
+         }
+         heroArt.animate().alpha(0f).setDuration(140).withEndAction(() -> {
++            heroArt.setScaleType(fit);
+             heroArt.setImageBitmap(next);
+             heroArt.animate().alpha(heroArtAlpha).setDuration(420).start();
+         }).start();
+diff --git a/launcher/app/src/main/java/com/gathin/tvhome/ThemeFiles.java b/launcher/app/src/main/java/com/gathin/tvhome/ThemeFiles.java
+index 18fded94..5590b676 100644
+--- a/launcher/app/src/main/java/com/gathin/tvhome/ThemeFiles.java
++++ b/launcher/app/src/main/java/com/gathin/tvhome/ThemeFiles.java
+@@ -6,6 +6,8 @@ import java.util.regex.Pattern;
+ /** The files ThemeProvider may write or delete under Config.dir, by the URI's path segments. */
+ final class ThemeFiles {
+     static final String WALLPAPERS = "wallpapers";
++    /** vTV: one photo per app for the cinematic shelf, art/<package>.jpg (HeroArt.photo). */
++    static final String ART = "art";
+     /** The names tools/theme.sh accepts for a collection image, and the types WallpaperRotation reads. */
+     private static final Pattern IMAGE = Pattern.compile("[A-Za-z0-9_.-]+\\.(jpg|jpeg|png|webp)",
+             Pattern.CASE_INSENSITIVE);
+@@ -24,6 +26,9 @@ final class ThemeFiles {
+                 && (collectionImage(segments.get(1)) || WallpaperCaptions.FILE_NAME.equals(segments.get(1)))) {
+             return WALLPAPERS + "/" + segments.get(1);
+         }
++        if (segments.size() == 2 && ART.equals(segments.get(0)) && collectionImage(segments.get(1))) {
++            return ART + "/" + segments.get(1);
++        }
+         return null;
+     }
+ 
+diff --git a/launcher/app/src/test/java/com/gathin/tvhome/ThemeFilesTest.java b/launcher/app/src/test/java/com/gathin/tvhome/ThemeFilesTest.java
+index f523ab63..2309e76b 100644
+--- a/launcher/app/src/test/java/com/gathin/tvhome/ThemeFilesTest.java
++++ b/launcher/app/src/test/java/com/gathin/tvhome/ThemeFilesTest.java
+@@ -49,4 +49,12 @@ public class ThemeFilesTest {
+         assertFalse(ThemeFiles.isCollection(Arrays.asList("wallpapers", "dusk.jpg")));
+         assertFalse(ThemeFiles.isCollection(Collections.singletonList("config.json")));
+     }
++
++    @Test
++    public void vtvArtPhotos() {
++        assertEquals("art/com.stremio.one.jpg", ThemeFiles.path(Arrays.asList("art", "com.stremio.one.jpg")));
++        assertNull(ThemeFiles.path(Arrays.asList("art", "..")));
++        assertNull(ThemeFiles.path(Arrays.asList("art", "run.sh")));
++        assertNull(ThemeFiles.path(Arrays.asList("art", "sub", "a.jpg")));
++    }
+ }

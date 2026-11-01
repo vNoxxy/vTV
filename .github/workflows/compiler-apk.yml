@@ -34,6 +34,11 @@ jobs:
         with:
           packages: platforms;android-34 build-tools;34.0.0
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      # Toujours la même clé (signature/debug.keystore) : une nouvelle version s'installe par-dessus l'ancienne.
+      - name: Clé de signature fixe
+        run: mkdir -p ~/.android && cp signature/debug.keystore ~/.android/debug.keystore
+      - name: Patchs vTV du lanceur (lanceur/patchs)
+        run: for p in lanceur/patchs/*.patch; do echo "$p"; git -C cleanyourtv apply "../$p"; done
       - name: Tests unitaires et build release
         working-directory: cleanyourtv/launcher
         run: |
@@ -55,15 +60,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { nom: tv-hub, tache: assembleDebug, sortie: debug/app-debug.apk }
-          - { nom: sleep-timer, tache: assembleRelease, sortie: release/app-release.apk }
-          - { nom: weather, tache: assembleRelease, sortie: release/app-release.apk }
-          - { nom: world-clock, tache: assembleRelease, sortie: release/app-release.apk }
-          - { nom: photo-screensaver, tache: assembleRelease, sortie: release/app-release.apk }
-          - { nom: photo-prints, tache: assembleRelease, sortie: release/app-release.apk }
-          - { nom: news-screensaver, tache: assembleRelease, sortie: release/app-release.apk }
-          - { nom: digital-rain, tache: assembleRelease, sortie: release/app-release.apk }
-          - { nom: startup-branding, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: tv-hub, paquet: io.github.maxhayim.tvhub, tache: assembleDebug, sortie: debug/app-debug.apk }
+          - { nom: sleep-timer, paquet: io.github.luyzfernando08.sleeptimer, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: weather, paquet: io.github.sumyabazar1.weather, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: world-clock, paquet: io.github.savioronezero.worldclock, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: photo-screensaver, paquet: com.gathin.photodream, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: photo-prints, paquet: io.github.shivamsingh262.photoprints, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: news-screensaver, paquet: com.gathin.newsdream, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: digital-rain, paquet: io.github.dennisoleary.digitalrain, tache: assembleRelease, sortie: release/app-release.apk }
+          - { nom: startup-branding, paquet: io.github.maxhayim.startupbranding, tache: assembleRelease, sortie: release/app-release.apk }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Version de cleanyourtv à compiler
@@ -83,6 +88,9 @@ jobs:
         with:
           packages: platforms;android-34 build-tools;34.0.0
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      # Toujours la même clé (signature/debug.keystore) : une nouvelle version s'installe par-dessus l'ancienne.
+      - name: Clé de signature fixe
+        run: mkdir -p ~/.android && cp signature/debug.keystore ~/.android/debug.keystore
       - name: Build ${{ matrix.nom }}
         working-directory: cleanyourtv/addons/${{ matrix.nom }}
         run: |
@@ -90,12 +98,13 @@ jobs:
           chmod +x gradlew ../../launcher/gradlew
           ./gradlew --no-daemon ${{ matrix.tache }}
           mkdir -p "$GITHUB_WORKSPACE/sortie"
-          cp "app/build/outputs/apk/${{ matrix.sortie }}" "$GITHUB_WORKSPACE/sortie/${{ matrix.nom }}.apk"
-          sha256sum "$GITHUB_WORKSPACE/sortie/${{ matrix.nom }}.apk"
+          # Nommé d'après son paquet : installer-addons.ps1 sait ainsi quoi remplacer.
+          cp "app/build/outputs/apk/${{ matrix.sortie }}" "$GITHUB_WORKSPACE/sortie/${{ matrix.paquet }}.apk"
+          sha256sum "$GITHUB_WORKSPACE/sortie/${{ matrix.paquet }}.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: addon-${{ matrix.nom }}
-          path: sortie/${{ matrix.nom }}.apk
+          path: sortie/${{ matrix.paquet }}.apk
           if-no-files-found: error
 
   # Les raccourcis vers les sites (raccourcis/) : une appli par entrée de raccourcis/sites.json.
@@ -134,6 +143,9 @@ jobs:
         with:
           packages: platforms;android-34 build-tools;34.0.0
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      # Toujours la même clé (signature/debug.keystore) : une nouvelle version s'installe par-dessus l'ancienne.
+      - name: Clé de signature fixe
+        run: mkdir -p ~/.android && cp signature/debug.keystore ~/.android/debug.keystore
       - name: Build site-${{ matrix.site.id }}
         env:
           SITE_ID: ${{ matrix.site.id }}
@@ -144,12 +156,12 @@ jobs:
           cleanyourtv/launcher/gradlew --no-daemon -p raccourcis assembleRelease \
             "-PsiteId=$SITE_ID" "-PsiteNom=$SITE_NOM" "-PsiteUrl=$SITE_URL"
           mkdir -p sortie
-          cp raccourcis/app/build/outputs/apk/release/app-release.apk "sortie/site-$SITE_ID.apk"
-          sha256sum "sortie/site-$SITE_ID.apk"
+          cp raccourcis/app/build/outputs/apk/release/app-release.apk "sortie/io.github.vnoxxy.vtv.site.$SITE_ID.apk"
+          sha256sum "sortie/io.github.vnoxxy.vtv.site.$SITE_ID.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: addon-site-${{ matrix.site.id }}
-          path: sortie/site-${{ matrix.site.id }}.apk
+          path: sortie/io.github.vnoxxy.vtv.site.${{ matrix.site.id }}.apk
           if-no-files-found: error
 
   # Un seul zip à télécharger : Artifacts → addons-apk (add-ons et raccourcis).
