@@ -1,0 +1,7 @@
+# DNS privé AdGuard : bloque les domaines de pub et de pistage dans toutes les applis (pas les pubs
+# YouTube). AdGuard voit alors les noms de domaine que le boîtier consulte.
+# Annuler : commandes\dns-annuler.txt
+settings put global private_dns_specifier dns.adguard-dns.com
+settings put global private_dns_mode hostname
+settings get global private_dns_mode
+settings get global private_dns_specifier

@@ -1,0 +1,3 @@
+# Remet le DNS du boîtier comme avant commandes\dns-adguard.txt (aucun DNS privé).
+settings put global private_dns_mode off
+settings delete global private_dns_specifier

@@ -1,0 +1,7 @@
+# Écran de veille : l'horloge du lanceur (ClockDream) après 10 minutes sans activité.
+# Avant : com.android.dreams.basic/com.android.dreams.basic.Colors, et jamais de mise en veille.
+settings put secure screensaver_enabled 1
+settings put secure screensaver_components com.gathin.tvhome/.ClockDream
+settings put secure screensaver_activate_on_sleep 1
+settings put system screen_off_timeout 600000
+settings get secure screensaver_components

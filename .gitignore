@@ -6,3 +6,6 @@ accueil.png
 addons-apk/
 # Réponses du boîtier (collecter-infos.ps1, executer.ps1) : propres à ce boîtier
 /*.txt
+raccourcis/.gradle/
+raccourcis/build/
+raccourcis/app/build/

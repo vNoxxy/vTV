@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Une appli par site, toutes du même code : la tuile du site sur l'accueil, et un nom de paquet
+// à mettre dans dock_apps. Le workflow passe -PsiteId, -PsiteNom et -PsiteUrl (raccourcis/sites.json).
+def siteId = providers.gradleProperty('siteId').get()
+def siteNom = providers.gradleProperty('siteNom').get()
+def siteUrl = providers.gradleProperty('siteUrl').get()
+
+android {
+    namespace 'io.github.vnoxxy.vtv.site'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "io.github.vnoxxy.vtv.site.${siteId}"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+        resValue 'string', 'app_name', siteNom
+        resValue 'string', 'site_url', siteUrl
+    }
+
+    // La tuile et l'icône du site, dessinées par visuels/vody.py.
+    sourceSets {
+        main.res.srcDirs += "../sites/${siteId}/res"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            // Installée par ADB comme le lanceur : signée avec la clé de debug.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
