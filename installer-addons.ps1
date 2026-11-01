@@ -20,7 +20,8 @@ if (-not (Test-Path $py)) { throw 'Lance d''abord preparer-pc.ps1' }
 $tv = Join-Path $repo 'tools\tv.py'
 $b64push = Join-Path $repo 'tools\b64push.py'
 
-$apks = @(Get-ChildItem -Path $Dossier -Filter *.apk | Sort-Object Name)
+# -Recurse : le dézippage de Windows met souvent les APK dans un sous-dossier du même nom.
+$apks = @(Get-ChildItem -Path $Dossier -Filter *.apk -Recurse | Sort-Object Name)
 if ($Seulement) { $apks = @($apks | Where-Object { $Seulement -contains $_.BaseName }) }
 if (-not $apks) { throw "Aucun APK à installer dans $Dossier" }
 
