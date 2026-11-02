@@ -2,6 +2,9 @@
 # Firmware rk3328_box-userdebug 11 RQ2A.210505.003 eng.pc.20211029.102843 (octobre 2021).
 # Fingerprint: Rockchip/rk3328_box/rk3328_box:11/RQ2A.210505.003/eng.pc.20211029.102843:userdebug/release-keys
 #
+# Ce fichier reste ici : la sauvegarde de restauration de cleanyourtv est rangée sous le chemin complet
+# de la liste, la déplacer empêcherait de tout annuler. Le reste du boîtier est dans boitiers/h96-max-v11/.
+#
 # Appliquer (depuis le dossier cleanyourtv) :
 #   powershell -ExecutionPolicy Bypass -File tools\disable.ps1 -TvHost <ip> ..\listes\h96-max-v11.txt
 # Annuler :

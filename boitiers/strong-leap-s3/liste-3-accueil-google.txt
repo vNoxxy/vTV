@@ -1,0 +1,3 @@
+# Strong LEAP-S3+ V2, étape 3 : l'accueil de Google TV. Seulement quand le lanceur vTV est installé, qu'il est
+# l'accueil (commandes accueil.txt) et que l'étape 2 a passé un redémarrage.
+com.google.android.apps.tv.launcherx

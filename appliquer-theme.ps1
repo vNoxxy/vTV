@@ -1,17 +1,16 @@
-﻿# Envoie un thème au lanceur : d'abord ses photos de fond par appli (art/<paquet>.jpg, que seul le lanceur
+﻿# Envoie un thème au lanceur : d'abord les photos de fond par appli (art/<paquet>.jpg, que seul le lanceur
 # patché par vTV accepte), puis le thème lui-même par tools\theme.ps1 de cleanyourtv, qui redémarre l'accueil.
+# Les photos viennent du dossier art\ du thème s'il en a un, sinon de themes\art\, partagé par les boîtiers.
 #
-# Usage : powershell -ExecutionPolicy Bypass -File appliquer-theme.ps1 -TvHost 192.168.1.83 [themes\premium]
+# Usage : powershell -ExecutionPolicy Bypass -File appliquer-theme.ps1 -TvHost 192.168.1.83 boitiers\h96-max-v11\theme
 param(
-    [Parameter(Position = 0)][string]$Theme,
+    [Parameter(Mandatory = $true, Position = 0)][string]$Theme,
     [string]$TvHost = $env:TV_HOST
 )
 $ErrorActionPreference = 'Stop'
 $OutputEncoding = New-Object System.Text.UTF8Encoding $false
 if (-not $TvHost) { throw 'Passe -TvHost <ip du boîtier>' }
 $env:TV_HOST = $TvHost
-# $PSScriptRoot est vide dans les valeurs par défaut de param() sous Windows PowerShell 5.1.
-if (-not $Theme) { $Theme = Join-Path $PSScriptRoot 'themes\premium' }
 $Theme = (Resolve-Path $Theme).Path
 
 $repo = Join-Path $PSScriptRoot 'cleanyourtv'
@@ -20,6 +19,7 @@ if (-not (Test-Path $py)) { throw 'Lance d''abord preparer-pc.ps1' }
 $tv = Join-Path $repo 'tools\tv.py'
 
 $art = Join-Path $Theme 'art'
+if (-not (Test-Path $art)) { $art = Join-Path $PSScriptRoot 'themes\art' }
 if (Test-Path $art) {
     foreach ($photo in Get-ChildItem $art -Filter *.jpg) {
         $tmp = '/data/local/tmp/vtv-art.jpg'

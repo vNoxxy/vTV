@@ -1,0 +1,31 @@
+# Strong LEAP-S3+ V2 (Google TV), étape 1 : publicité, télémétrie et outils d'usine.
+# Base : examples/strong-leap-s3 de cleanyourtv (LEAP-S3, SkyworthDigital YDA, Amlogic S905Y4, Google TV 14),
+# plus les choix déjà faits sur le H96 (pas d'assistant vocal, pas de télémétrie Google). À relire après la
+# collecte : un paquet absent de ce boîtier est simplement sauté.
+#
+# Appliquer (depuis le dossier cleanyourtv) :
+#   powershell -ExecutionPolicy Bypass -File tools\disable.ps1 -TvHost <ip> ..\boitiers\strong-leap-s3\liste-1-nettoyage.txt
+# Annuler :
+#   powershell -ExecutionPolicy Bypass -File tools\restore.ps1 -TvHost <ip> -Stock com.google.android.apps.tv.launcherx ..\boitiers\strong-leap-s3\liste-1-nettoyage.txt
+#
+# Gardés exprès (note du LEAP-S3) : com.sdt.globalkey et com.sdt.vendor (boutons d'applis de la télécommande),
+# com.droidlogic.* (appairage de la télécommande, HDMI-CEC, image), com.mft.rcupair, com.sdt.ota, com.sdt.upgrade,
+# com.google.android.tv.dfuservice (mises à jour), com.google.android.tv.remote.service (télécommande sur téléphone),
+# Play Store et services Google.
+
+# Publicité ciblée (Privacy Sandbox)
+com.android.adservices.api
+com.android.ondevicepersonalization.services
+com.android.federatedcompute.services
+
+# Tests d'usine, retours et télémétrie
+com.oem.qa
+com.sdt.producttest
+com.amlogic.voicesubtitle                   # sans effet visible une fois désactivé
+com.android.tv.feedbackconsent
+com.google.android.feedback
+com.google.android.partnersetup
+
+# Extras Google
+com.google.android.play.games
+com.google.android.katniss                  # Assistant Google et recherche vocale : le micro ne sert pas

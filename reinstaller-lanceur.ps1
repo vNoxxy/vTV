@@ -6,10 +6,15 @@
 # Avec -MiseAJour : une nouvelle version signée avec la même clé s'installe par-dessus, sans désinstaller
 # ni perdre les réglages (étapes 1 et 2 sautées).
 #
+# Avec -Accueil none : l'accueil d'origine n'est pas touché (Google TV : il se désactive à part, dans l'ordre
+# de boitiers\strong-leap-s3\README.md). Avec -ServiceTouches : les boutons de télécommande qu'Android ne
+# donne plus au lanceur (engrenage, YouTube) passent par son service d'accessibilité (HomeKeyService).
+#
 # Usage : powershell -ExecutionPolicy Bypass -File reinstaller-lanceur.ps1 -TvHost 192.168.1.83 -Apk .\app-release.apk [-MiseAJour]
 param(
     [Parameter(Mandatory = $true)][string]$Apk,
     [switch]$MiseAJour,
+    [switch]$ServiceTouches,
     [string]$Accueil = 'com.droidlogic.mboxlauncher',
     [string]$TvHost = $env:TV_HOST
 )
@@ -42,6 +47,8 @@ $dest = Join-Path $repo 'launcher\app\build\outputs\apk\release'
 New-Item -ItemType Directory -Force $dest | Out-Null
 Copy-Item $Apk (Join-Path $dest 'app-release.apk') -Force
 $env:SKIP_BUILD = '1'
-& powershell -ExecutionPolicy Bypass -File (Join-Path $repo 'launcher\build-and-install.ps1') -TvHost $TvHost -StockLauncher $Accueil
+$options = @('-TvHost', $TvHost, '-StockLauncher', $Accueil)
+if ($ServiceTouches) { $options += '-HomeKeyService' }
+& powershell -ExecutionPolicy Bypass -File (Join-Path $repo 'launcher\build-and-install.ps1') @options
 if ($LASTEXITCODE -ne 0) { throw "Installation du lanceur échouée : l'accueil d'origine reste actif." }
 Write-Host 'Lanceur installé. Renvoie le thème : appliquer-theme.ps1 -TvHost <ip>'

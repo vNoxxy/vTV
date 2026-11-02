@@ -1,0 +1,5 @@
+# Strong LEAP-S3+ V2, étape 2 : l'assistant de configuration de Google TV, qui répond aussi à Accueil.
+# Seul, et pendant que l'accueil Google (launcherx) est encore actif. Le Wi-Fi enregistré au premier démarrage
+# lui appartient : le désactiver coupe ce Wi-Fi (voir le README de ce dossier, « Wi-Fi d'abord »).
+# tools\disable.ps1 refuse de le désactiver tant qu'il possède le Wi-Fi.
+com.google.android.tungsten.setupwraith

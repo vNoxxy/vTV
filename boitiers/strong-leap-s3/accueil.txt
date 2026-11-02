@@ -1,0 +1,4 @@
+# Fait du lanceur vTV l'accueil pour de bon (rôle HOME d'Android 14), avant l'étape 3.
+cmd role add-role-holder --user 0 android.app.role.HOME com.gathin.tvhome
+cmd package set-home-activity --user 0 com.gathin.tvhome/.MainActivity
+cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME

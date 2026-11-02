@@ -13,6 +13,7 @@ enlever les pubs, la télémétrie et les applis préinstallées, et remplacer l
 |---|---|---|
 | TV **Philips 55PUS6503/12** (2019, châssis TPM18.6E LA) | Saphi, pas Android | Écran seulement : cleanyourtv ne peut rien y faire. |
 | Boîtier **H96 Max V11** (Rockchip RK3318, 2 Go / 16 Go) | Android 11 | Le boîtier nettoyé : liste `listes/h96-max-v11.txt`, lanceur cleanyourtv. |
+| Boîtier **Strong LEAP-S3+ V2** (Google TV) | Google TV | Second boîtier, même résultat : `boitiers/strong-leap-s3/`. |
 | Boîtier **X88 Pro 10** (Rockchip RK3318, 4 Go / 32 Go) | Android | Pas utilisé : pas d'ADB réseau, cité dans les rapports BADBOX 2.0. |
 
 Ce dépôt ne recopie pas cleanyourtv. Il contient :
@@ -27,54 +28,22 @@ Ce dépôt ne recopie pas cleanyourtv. Il contient :
 | `installer-addons.ps1` | Installe les APK du zip `addons-apk` (add-ons et raccourcis). |
 | `image-demarrage.ps1` | Envoie une image à l'add-on Startup & Branding. |
 | `captures.ps1` | Prend des captures d'écran du boîtier (accueil, dock, grille) dans `captures\`. |
-| `listes/` | Les listes d'applis désactivées, par boîtier. |
+| `listes/` | La liste du H96 (restée là pour sa sauvegarde de restauration). |
 | `lanceur/patchs/` | Les modifications vTV du lanceur, appliquées par GitHub Actions : photo de fond par appli, bibliothèque plein écran, réglages façon tvOS. |
 | `signature/` | La clé fixe qui signe le lanceur, les add-ons et les raccourcis (mises à jour par-dessus). |
 | `reinstaller-lanceur.ps1`, `appliquer-theme.ps1` | Installer le lanceur patché, envoyer le thème et ses photos `art/`. |
-| `themes/premium/` | Le thème du lanceur, façon Apple TV : étagère cinématique, dock en verre, effets avancés. |
+| `themes/art/` | Les photos de fond par appli, partagées par les thèmes des boîtiers (`boitiers/<boîtier>/theme/`). |
 | `raccourcis/` | Une appli par site de `raccourcis/sites.json` : sa tuile sur l'accueil ouvre le site dans Chrome. Icône et bannière fournies par le propriétaire, dans `raccourcis/sites/<id>/res/drawable-nodpi/`. |
 
-## H96 Max V11 : personnalisation
+## Un dossier par boîtier
 
-Depuis `N:\vTV`, après `git pull`, avec `$ip = '192.168.1.83'` :
-
-| Étape | Commande |
+| Boîtier | Dossier |
 |---|---|
-| Désinstaller les applis inutilisées | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\desinstaller.txt` |
-| Installer add-ons et raccourcis (zip `addons-apk` dézippé dans `addons-apk\`) | `powershell -ExecutionPolicy Bypass -File installer-addons.ps1 -TvHost $ip -Dossier .\addons-apk` |
-| Mettre à jour le lanceur (zip `lanceur-apk`) | `powershell -ExecutionPolicy Bypass -File reinstaller-lanceur.ps1 -TvHost $ip -Apk .\app-release.apk -MiseAJour` |
-| Thème premium et photos de fond (dock, applis masquées, « Bonjour, Timéo ») | `powershell -ExecutionPolicy Bypass -File appliquer-theme.ps1 -TvHost $ip` |
-| Horloge en écran de veille après 10 min | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\ecran-de-veille.txt` |
-| DNS anti-pub AdGuard (annuler : `dns-annuler.txt`) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\dns-adguard.txt` |
-| Image de l'écran de démarrage (Startup & Branding) | `powershell -ExecutionPolicy Bypass -File image-demarrage.ps1 -TvHost $ip C:\chemin\image.png` |
-| Retirer le raccourci YouTube Web | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\retirer-sites.txt` |
-| Horloges World Clock (France, New York, Tokyo, São Paulo) | `powershell -ExecutionPolicy Bypass -File executer.ps1 -TvHost $ip commandes\world-clock.txt` |
-| Captures d'écran à envoyer (dans `captures\`) | `powershell -ExecutionPolicy Bypass -File captures.ps1 -TvHost $ip` |
+| H96 Max V11 (Android 11) | [`boitiers/h96-max-v11/`](boitiers/h96-max-v11/README.md) |
+| Strong LEAP-S3+ V2 (Google TV) | [`boitiers/strong-leap-s3/`](boitiers/strong-leap-s3/README.md) |
 
-L'animation de démarrage du boîtier ne se remplace pas : elle est sur une partition système en
-lecture seule, protégée par dm-verity (`ro.boot.veritymode=enforcing`). La lever risque d'empêcher
-le boîtier de démarrer.
-
-### Refermer l'ADB réseau (à la fin)
-
-Ce firmware ouvre l'ADB sur le port 5555 sans demander d'autorisation et en root
-(`ro.adb.secure=0`). Deux scripts du fabricant s'en chargent : `init.rk30board.rc` ouvre le port
-tant que `persist.internet_adb_enable=1`, et `init.hcy.rc` remet `service.adb.tcp.port=5555` à
-chaque démarrage sans redémarrer adbd.
-
-1. Quand tout est réglé : Options pour les développeurs → désactive **Débogage USB** (adbd s'arrête).
-2. Redémarre le boîtier, puis vérifie depuis le PC :
-   `cleanyourtv\tools\venv\Scripts\python.exe -I cleanyourtv\tools\adb-closed.py 192.168.1.83`
-   doit dire que le port est fermé.
-3. Pour modifier à nouveau : réactive **Débogage USB**. adbd redémarre sur le port 5555.
-
-Si le port reste ouvert après l'étape 2 (débogage réactivé), `setprop persist.internet_adb_enable 0`
-fait fermer le port 5555 par `init.rk30board.rc` ; `setprop persist.internet_adb_enable 1` le rouvre.
-
-Le dock attend Stremio (`com.stremio.one`) : installe-le depuis le Play Store. Une appli absente
-est simplement sautée. Pour ajouter un site : une ligne dans `raccourcis/sites.json`, et son icône
-(`icon.png`) et sa bannière 320×180 (`banner.png`, facultative) dans
-`raccourcis/sites/<id>/res/drawable-nodpi/`. Sans bannière, le lanceur montre l'icône.
+Chaque dossier a son guide pas à pas, ses listes, ses commandes et son thème. À la racine : les outils
+communs (scripts `.ps1`, `commandes/` générales, `raccourcis/`, `lanceur/patchs/`, `themes/art/`, `signature/`).
 
 ## Étape 0 : récupérer l'APK du lanceur
 
@@ -186,6 +155,3 @@ Les applis désactivées peuvent revenir. Réactive le débogage et compare :
 tools\venv\Scripts\python.exe -I tools\check.py <liste>          # ajoute --fix pour réappliquer
 ```
 
-Les anciennes copies de la bibliothèque Trichrome de Chrome (environ 700 Mo) restent : le
-gestionnaire de paquets refuse de les supprimer (`DELETE_FAILED_INTERNAL_ERROR`). Après les
-désinstallations, il reste 2,9 Go libres.

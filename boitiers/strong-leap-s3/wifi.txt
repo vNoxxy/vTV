@@ -1,0 +1,3 @@
+# Lecture seule : à qui appartient le Wi-Fi enregistré. « cname=com.google.android.tungsten.setupwraith » :
+# oublie ce réseau et reconnecte-toi dans Paramètres avant l'étape 2. Rien : câble Ethernet, pas de souci.
+dumpsys wifi | grep -o 'cname=[^ ]*' | sort -u
