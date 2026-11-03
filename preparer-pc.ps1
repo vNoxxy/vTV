@@ -2,16 +2,17 @@
 # cleanyourtv.commit, crée l'environnement Python de ses outils et place l'APK compilé par
 # GitHub Actions là où launcher\build-and-install.ps1 l'attend avec SKIP_BUILD=1.
 #
-# Usage : powershell -ExecutionPolicy Bypass -File preparer-pc.ps1 -Apk C:\chemin\app-release.apk
+# Usage : powershell -ExecutionPolicy Bypass -File preparer-pc.ps1 [-Apk C:\chemin\app-release.apk]
+# Sans -Apk : seulement cleanyourtv et ses outils, par exemple pour lire un appareil (collecter-infos.ps1).
 param(
-    [Parameter(Mandatory = $true)][string]$Apk
+    [string]$Apk
 )
 $ErrorActionPreference = 'Stop'
 
 foreach ($cmd in 'git', 'python') {
     if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) { throw "$cmd est introuvable : installe-le (voir README) puis relance." }
 }
-if (-not (Test-Path $Apk)) { throw "APK introuvable : $Apk" }
+if ($Apk -and -not (Test-Path $Apk)) { throw "APK introuvable : $Apk" }
 
 $commit = (Get-Content (Join-Path $PSScriptRoot 'cleanyourtv.commit') -Raw).Trim()
 $dest = Join-Path $PSScriptRoot 'cleanyourtv'
@@ -34,8 +35,10 @@ if (-not (Test-Path $py)) {
 & $py -m pip install -q -r (Join-Path $dest 'tools\requirements.txt')
 if ($LASTEXITCODE -ne 0) { throw 'Installation des dépendances Python échouée' }
 
-$out = Join-Path $dest 'launcher\app\build\outputs\apk\release'
-New-Item -ItemType Directory -Force $out | Out-Null
-Copy-Item $Apk (Join-Path $out 'app-release.apk') -Force
+if ($Apk) {
+    $out = Join-Path $dest 'launcher\app\build\outputs\apk\release'
+    New-Item -ItemType Directory -Force $out | Out-Null
+    Copy-Item $Apk (Join-Path $out 'app-release.apk') -Force
+}
 
 Write-Host "Prêt. cleanyourtv est dans $dest (version $commit)."
